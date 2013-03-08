@@ -6,6 +6,9 @@ weblog.generateUniqueId = (length=8) ->
   id += Math.random().toString(36).substr(2) while id.length < length
   id.substr 0, length
 
+weblog.epochTimeInSeconds = () ->
+  Math.round(new Date().getTime() / 1000)
+
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
 ###
@@ -23,10 +26,7 @@ class weblog.Logger
     metricMessage = @_createMetricMessage(metricName, metricValue)
     @webSocket.send(metricMessage)
 
-  _createMetricMessage: (metricName, metricValue, timestamp) ->
-    if not timestamp
-      timestamp = new Date().toUTCString()
-
+  _createMetricMessage: (metricName, metricValue, timestamp=weblog.epochTimeInSeconds()) ->
     return "#{@apiKey} #{metricName} #{metricValue} #{timestamp}"
 
   toString: ->

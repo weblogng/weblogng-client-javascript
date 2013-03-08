@@ -1,6 +1,7 @@
 global.window = require("jsdom").jsdom().createWindow()
 
 Logger = require('../src/logger').Logger
+epochTimeInSeconds = require('../src/logger').epochTimeInSeconds
 
 describe 'Logger', ->
 
@@ -24,8 +25,6 @@ describe 'Logger', ->
 
     s = logger.toString()
 
-    console.log s
-
     expect(s).toContain(logger.id)
     expect(s).toContain(logger.apiHost)
     expect(s).toContain(logger.apiKey)
@@ -47,5 +46,28 @@ describe 'Logger', ->
 
     expect(logger._createMetricMessage).toHaveBeenCalled()
     expect(logger.webSocket.send).toHaveBeenCalled()
+
+    done()
+
+  it 'should create a metric message using provided name and value, defaulting to current epoch time', (done) ->
+    metricName = "metric_name_" + Math.random()
+    metricValue = Math.random()
+    timestamp = epochTimeInSeconds()
+
+    message = logger._createMetricMessage(metricName, metricValue)
+
+    truncatedTimestamp = Math.floor(timestamp / 10)
+    expect(message).toContain("#{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
+
+    done()
+
+  it 'should create a metric message using provided name and value time, when provided', (done) ->
+    metricName = "metric_name"
+    metricValue = 42
+    timestamp = 1362714242
+
+    message = logger._createMetricMessage(metricName, metricValue, timestamp)
+
+    expect(message).toBe("#{apiKey} #{metricName} #{metricValue} #{timestamp}")
 
     done()
