@@ -71,3 +71,9 @@ describe 'Logger', ->
     expect(message).toBe("#{apiKey} #{metricName} #{metricValue} #{timestamp}")
 
     done()
+
+describe 'epochTimeInSeconds', ->
+
+  it 'should compute current epoch time, in seconds', (done) ->
+    expect((epochTimeInSeconds() * 1000) - new Date().getTime()).toBeLessThan(1001)
+    done()
