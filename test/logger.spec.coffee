@@ -57,7 +57,7 @@ describe 'Logger', ->
     message = logger._createMetricMessage(metricName, metricValue)
 
     truncatedTimestamp = Math.floor(timestamp / 10)
-    expect(message).toContain("#{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
+    expect(message).toContain("v1.metric #{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
 
     done()
 
@@ -68,7 +68,7 @@ describe 'Logger', ->
 
     message = logger._createMetricMessage(metricName, metricValue, timestamp)
 
-    expect(message).toBe("#{apiKey} #{metricName} #{metricValue} #{timestamp}")
+    expect(message).toBe("v1.metric #{apiKey} #{metricName} #{metricValue} #{timestamp}")
 
     done()
 

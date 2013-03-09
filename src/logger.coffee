@@ -27,7 +27,7 @@ class weblog.Logger
     @webSocket.send(metricMessage)
 
   _createMetricMessage: (metricName, metricValue, timestamp=weblog.epochTimeInSeconds()) ->
-    return "#{@apiKey} #{metricName} #{metricValue} #{timestamp}"
+    return "v1.metric #{@apiKey} #{metricName} #{metricValue} #{timestamp}"
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"
