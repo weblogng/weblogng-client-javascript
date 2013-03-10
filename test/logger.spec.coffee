@@ -50,7 +50,7 @@ describe 'Logger', ->
     done()
 
   it 'should create a metric message using provided name and value, defaulting to current epoch time', (done) ->
-    metricName = "metric_name_" + Math.random()
+    metricName = "metric_name_" + Math.floor(Math.random() * 1000)
     metricValue = Math.random()
     timestamp = epochTimeInSeconds()
 
@@ -69,6 +69,22 @@ describe 'Logger', ->
     message = logger._createMetricMessage(metricName, metricValue, timestamp)
 
     expect(message).toBe("v1.metric #{apiKey} #{metricName} #{metricValue} #{timestamp}")
+
+    done()
+
+  it 'should sanitize metric names', (done) ->
+    forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
+    for forbiddenChar in forbiddenChars
+      expect(logger._sanitizeMetricName("metric-name_1#{forbiddenChar}2")).toBe("metric-name_1_2")
+
+    done()
+
+  it 'should sanitize metric names when sending a metric', (done) ->
+    spyOn(logger, '_sanitizeMetricName')
+
+    logger._createMetricMessage("metric name", 42)
+
+    expect(logger._sanitizeMetricName).toHaveBeenCalled()
 
     done()
 

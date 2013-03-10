@@ -11,6 +11,7 @@ weblog.epochTimeInSeconds = () ->
 
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
+  TODO: implement with socket.io
 ###
 class weblog.WebSocket
   send: (message) ->
@@ -27,7 +28,11 @@ class weblog.Logger
     @webSocket.send(metricMessage)
 
   _createMetricMessage: (metricName, metricValue, timestamp=weblog.epochTimeInSeconds()) ->
-    return "v1.metric #{@apiKey} #{metricName} #{metricValue} #{timestamp}"
+    sanitizedMetricName = @_sanitizeMetricName(metricName)
+    return "v1.metric #{@apiKey} #{sanitizedMetricName} #{metricValue} #{timestamp}"
+
+  _sanitizeMetricName: (metricName) ->
+    metricName.replace /[^\w\d_-]/g, '_'
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"
