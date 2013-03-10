@@ -1,0 +1,25 @@
+{
+  "name": "weblog-ng-logging-standalone",
+  "version": "0.1.0",
+  "description": "weblog-ng standalone logging library",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qualimente/weblog-ng-logging-standalone.git"
+  },
+  "author": "skuenzli",
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-contrib-connect": "~0.1.2",
+    "grunt-contrib-watch": "~0.2.0",
+    "grunt-contrib-copy": "~0.4.0",
+    "grunt-contrib-coffee": "~0.4.0",
+    "grunt-contrib-clean": "~0.4.0",
+    "phantomjs": "~1.8.1",
+    "testacular": "~0.5.10",
+    "grunt-contrib-concat": "~0.1.2",
+    "grunt-testacular": "~0.3.0"
+  }
+}
