@@ -12,7 +12,7 @@
 
             $(document).ready(function () {
                 console.log("document ready, creating logger")
-                var logger = new weblog.Logger("localhost:9000", "48df66c0-b58d-499d-8c4e-e7c2c28b8379")
+                window.logger = new weblog.Logger("localhost:9000", "48df66c0-b58d-499d-8c4e-e7c2c28b8379")
                 console.log("logger: " + logger.toString())
             });
 
