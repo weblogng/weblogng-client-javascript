@@ -27,13 +27,24 @@ module.exports = (grunt) ->
           dest: 'config'
           ext: '.js'
         ]
+
     concat:
       development:
         files:
           'build/development/js/vendor.js': [
-            #'vendor/script/**/*.js'
+#            'vendor/js/requirejs/require.js'
+#            'vendor/js/requirejs/domReady.js'
+#            'node_modules/socket.io/lib/socket.io.js'
+            #'vendor/socket.io/socket.io.js'
+            #'vendor/js/**/*.js'
           ]
           'build/development/js/vendor.css': 'vendor/style/**/*.css'
+
+    copy:
+      development:
+        files:
+          'build/development/app.html': 'src/app.html'
+
     connect:
       server:
         options:
@@ -50,6 +61,9 @@ module.exports = (grunt) ->
       config:
         files: ['config/testacular/*.coffee']
         tasks: 'coffee:config'
+      copy:
+        files: ['src/app.html']
+        tasks: 'copy:development'
 
     testacular:
       unit:
@@ -74,8 +88,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-watch'
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
-#  grunt.loadNpmTasks 'grunt-contrib-jade'
-#  grunt.loadNpmTasks 'grunt-contrib-less'
   grunt.loadNpmTasks 'grunt-contrib-copy'
   grunt.loadNpmTasks 'grunt-contrib-clean'
   
@@ -86,9 +98,8 @@ module.exports = (grunt) ->
   grunt.registerTask 'development', [
     'clean:development'
     'coffee:development'
-#    'jade:development'
     'concat:development'
-#    'less:development'
+    'copy:development'
   ]
 
   grunt.registerTask 'test', 'testacular'

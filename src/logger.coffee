@@ -11,17 +11,22 @@ weblog.epochTimeInSeconds = () ->
 
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
-  TODO: implement with socket.io
 ###
-class weblog.WebSocket
+class weblog.Socket
+  constructor: (apiUrl) ->
+    console.log "constructing Socket to #{apiUrl}"
+    WS = if window['MozWebSocket'] then MozWebSocket else window['WebSocket']
+    @socket = new WS(apiUrl)
+
   send: (message) ->
+    @socket.send(message)
 
 
 class weblog.Logger
   constructor: (@apiHost, @apiKey) ->
     @id = weblog.generateUniqueId()
     @apiUrl = "ws://#{apiHost}/log/ws"
-    @webSocket = new weblog.WebSocket(@apiUrl)
+    @webSocket = new weblog.Socket(@apiUrl)
 
   sendMetric: (metricName, metricValue) ->
     metricMessage = @_createMetricMessage(metricName, metricValue)
