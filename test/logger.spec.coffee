@@ -1,5 +1,7 @@
 global.window = require("jsdom").jsdom().createWindow()
 
+#weblog = require('../src/logger')
+Timer = require('../src/logger').Timer
 Logger = require('../src/logger').Logger
 epochTimeInSeconds = require('../src/logger').epochTimeInSeconds
 
@@ -85,6 +87,14 @@ describe 'Logger', ->
     logger._createMetricMessage("metric name", 42)
 
     expect(logger._sanitizeMetricName).toHaveBeenCalled()
+
+    done()
+
+  it 'should record the current time when startTiming is called for a given metric name', (done) ->
+    metricName = 'save'
+#    logger.recordStart(metricName)
+#
+#    expect(logger.timers[metricName]).toBeCloseTo(new Date().getTime(), 3)
 
     done()
 

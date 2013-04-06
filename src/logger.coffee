@@ -21,12 +21,31 @@ class weblog.Socket
   send: (message) ->
     @socket.send(message)
 
+class weblog.Timer
+  constructor: () ->
+    console.log "created timer"
+
+  start: () ->
+    @tStart = new Date()
+    console.log "started timer at #{@tStart}"
+    return
+
+  finish: () ->
+    @tFinish = new Date()
+    console.log "finished timer at #{@tFinish}"
+    return
+
+  getElapsedTime: () ->
+    console.log "getElapsedTime: #{@tStart} - #{@tFinish}"
+    return @tFinish.getTime() - @tStart.getTime()
+
 
 class weblog.Logger
   constructor: (@apiHost, @apiKey) ->
     @id = weblog.generateUniqueId()
     @apiUrl = "ws://#{apiHost}/log/ws"
     @webSocket = new weblog.Socket(@apiUrl)
+    @timers = {}
 
   sendMetric: (metricName, metricValue) ->
     metricMessage = @_createMetricMessage(metricName, metricValue)
@@ -38,6 +57,19 @@ class weblog.Logger
 
   _sanitizeMetricName: (metricName) ->
     metricName.replace /[^\w\d_-]/g, '_'
+
+  recordStart: (metricName) ->
+    console.log "recording start of #{metricName}"
+    timer = new weblog.Timer()
+    timer.start()
+    @timers[metricName] = timer
+    return timer
+
+  recordFinish: (metricName) ->
+    console.log "recording finish of #{metricName}"
+    timer = @timers[metricName]
+    timer.finish()
+    return timer
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"
