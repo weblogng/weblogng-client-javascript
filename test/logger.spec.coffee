@@ -9,11 +9,12 @@ Logger = weblog.Logger
   Create a mock WebSocket implementation to avoid browser-dependencies.
 ###
 class MockWS
+  @messages = []
+
   constructor: (@url) ->
-    console.log "instantiated MockWS to #{@url}"
 
   send: (message) ->
-    console.log "sending message over MockWS: #{message}"
+    @messages.push message
 
 ###
   replace _createWebSocket method on Logger prototype so that we use a mock WebSocket impl
@@ -39,9 +40,6 @@ describe 'Logger', ->
     logger = new weblog.Logger(apiHost, apiKey)
 
     expect(logger.id).toBeDefined()
-    console.log "logger id: #{logger.id}"
-    console.log "logger apiHost: #{logger.apiHost}"
-    console.log "logger apiKey: #{logger.apiKey}"
     expect(logger.apiHost).toBe(apiHost)
     expect(logger.apiKey).toBe(apiKey)
 
@@ -49,8 +47,6 @@ describe 'Logger', ->
 
   it 'should print property data in toString', (done) ->
     s = logger.toString()
-
-    console.log "logger.toString(): #{s}"
 
     expect(s).toContain(logger.id)
     expect(s).toContain(logger.apiHost)
