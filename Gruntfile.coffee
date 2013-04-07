@@ -17,6 +17,9 @@ module.exports = (grunt) ->
           'build/development/js/logger.js': [
             'src/logger.coffee'
           ]
+          , 'build/test/js/logger.spec.js': [
+            'test/logger.spec.coffee'
+          ]
       config:
         options:
           bare: true
@@ -32,11 +35,6 @@ module.exports = (grunt) ->
       development:
         files:
           'build/development/js/vendor.js': [
-#            'vendor/js/requirejs/require.js'
-#            'vendor/js/requirejs/domReady.js'
-#            'node_modules/socket.io/lib/socket.io.js'
-            #'vendor/socket.io/socket.io.js'
-            #'vendor/js/**/*.js'
           ]
           'build/development/js/vendor.css': 'vendor/style/**/*.css'
 
@@ -51,9 +49,15 @@ module.exports = (grunt) ->
           port: 8002
           base: "./#{DEV_PATH}"
 
+    karma:
+      unit:
+        background: true
+        options:
+          configFile: 'config/testacular/unit.js'
+
     watch:
       coffee:
-        files: ['src/*.coffee', 'src/**/*.coffee']
+        files: ['src/*.coffee', 'src/**/*.coffee', 'test/*.spec.coffee']
         tasks: 'coffee:development'
       concat:
         files: ['vendor/script/**/*.js', 'vendor/style/**/*.css']
@@ -64,22 +68,9 @@ module.exports = (grunt) ->
       copy:
         files: ['src/app.html']
         tasks: 'copy:development'
-
-    testacular:
-      unit:
-        options:
-          configFile: 'config/testacular/unit.js'
-      e2e:
-        options:
-          configFile: 'config/testacular/e2e.js'
-    testacularRun:
-      unit:
-        options:
-          runnerPort: 9201
-      e2e:
-        options:
-          runnerPort: 9202
-
+      karma:
+        files: ['build/development/js/**/*.js', 'build/test/js/logger.spec.js'],
+        tasks: ['karma:unit:run']
 
 
   # Dependencies
@@ -91,7 +82,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-copy'
   grunt.loadNpmTasks 'grunt-contrib-clean'
   
-  grunt.loadNpmTasks 'grunt-testacular'
+  grunt.loadNpmTasks 'grunt-karma'
 
   # Aliases
   grunt.registerTask 'config', 'coffee:config'
@@ -102,12 +93,11 @@ module.exports = (grunt) ->
     'copy:development'
   ]
 
-  grunt.registerTask 'test', 'testacular'
+  grunt.registerTask 'test', 'karma'
 
   grunt.registerTask 'default', [
     'config'
     'development'
     'test'
-    'connect:server'
     'watch'
   ]

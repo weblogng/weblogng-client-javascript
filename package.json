@@ -20,6 +20,7 @@
     "phantomjs": "~1.8.1",
     "testacular": "~0.5.10",
     "grunt-contrib-concat": "~0.1.2",
-    "grunt-testacular": "~0.3.0"
+    "grunt-testacular": "~0.3.0",
+    "grunt-karma": "~0.4.3"
   }
 }

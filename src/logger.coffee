@@ -1,7 +1,7 @@
 weblog = this
 window?.weblog = weblog
 
-weblog.generateUniqueId = (length=8) ->
+weblog.generateUniqueId = (length = 8) ->
   id = ""
   id += Math.random().toString(36).substr(2) while id.length < length
   id.substr 0, length
@@ -14,7 +14,6 @@ weblog.epochTimeInSeconds = () ->
 ###
 class weblog.Socket
   constructor: (apiUrl) ->
-    console.log "constructing Socket to #{apiUrl}"
     WS = if window['MozWebSocket'] then MozWebSocket else window['WebSocket']
     @socket = new WS(apiUrl)
 
@@ -26,13 +25,16 @@ class weblog.Logger
   constructor: (@apiHost, @apiKey) ->
     @id = weblog.generateUniqueId()
     @apiUrl = "ws://#{apiHost}/log/ws"
-    @webSocket = new weblog.Socket(@apiUrl)
+    @webSocket = @_createWebSocket(@apiUrl)
 
   sendMetric: (metricName, metricValue) ->
     metricMessage = @_createMetricMessage(metricName, metricValue)
     @webSocket.send(metricMessage)
 
-  _createMetricMessage: (metricName, metricValue, timestamp=weblog.epochTimeInSeconds()) ->
+  _createWebSocket: (apiUrl) ->
+    return new weblog.Socket(@apiUrl)
+
+  _createMetricMessage: (metricName, metricValue, timestamp = weblog.epochTimeInSeconds()) ->
     sanitizedMetricName = @_sanitizeMetricName(metricName)
     return "v1.metric #{@apiKey} #{sanitizedMetricName} #{metricValue} #{timestamp}"
 

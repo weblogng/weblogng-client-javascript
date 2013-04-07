@@ -1,8 +1,8 @@
-var autoWatch, basePath, browsers, files, junitReporter, logLevel, port, preprocessors, proxies, reporter, runnerPort, singleRun;
+var autoWatch, background, basePath, browsers, files, junitReporter, logLevel, port, preprocessors, proxies, reporter, runnerPort, singleRun;
 
 basePath = '../../';
 
-files = ['build/development/js/*.js', 'test/**/*.coffee'];
+files = ['build/development/js/*.js', 'build/test/js/logger.spec.js'];
 
 autoWatch = false;
 
@@ -10,7 +10,7 @@ browsers = ['PhantomJS'];
 
 singleRun = false;
 
-runnerPort = 9201;
+runnerPort = 9100;
 
 port = 9878;
 
@@ -21,8 +21,8 @@ proxies = {
 };
 
 junitReporter = {
-  outputFile: 'test_out/e2e.xml',
-  suite: 'e2e'
+  outputFile: 'test_out/unit.xml',
+  suite: 'unit'
 };
 
 preprocessors = {
@@ -30,3 +30,5 @@ preprocessors = {
 };
 
 logLevel = LOG_DEBUG;
+
+background = true;
