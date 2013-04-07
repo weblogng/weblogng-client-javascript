@@ -74,18 +74,18 @@ describe 'Logger', ->
 
     done()
 
-#  it 'should create a metric message using provided name and value, defaulting to current epoch time', (done) ->
-#    metricName = "metric_name_" + Math.floor(Math.random() * 1000)
-#    metricValue = Math.random()
-#    timestamp = epochTimeInSeconds()
-#
-#    message = logger._createMetricMessage(metricName, metricValue)
-#
-#    truncatedTimestamp = Math.floor(timestamp / 10)
-#    expect(message).toContain("v1.metric #{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
-#
-#    done()
-#
+  it 'should create a metric message using provided name and value, defaulting to current epoch time', (done) ->
+    metricName = "metric_name_" + Math.floor(Math.random() * 1000)
+    metricValue = Math.random()
+    timestamp = weblog.epochTimeInSeconds()
+
+    message = logger._createMetricMessage(metricName, metricValue)
+
+    truncatedTimestamp = Math.floor(timestamp / 10)
+    expect(message).toContain("v1.metric #{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
+
+    done()
+
   it 'should create a metric message using provided name and value time, when provided', (done) ->
     metricName = "metric_name"
     metricValue = 42
