@@ -32,9 +32,7 @@ class weblog.Timer
     return
 
   getElapsedTime: () ->
-    console.log "getElapsedTime: #{@tStart} - #{@tFinish}"
     return @tFinish - @tStart
-
 
 class weblog.Logger
   constructor: (@apiHost, @apiKey) ->
@@ -64,7 +62,6 @@ class weblog.Logger
     return timer
 
   recordFinish: (metricName) ->
-    console.log "recording finish of #{metricName}"
     if @timers[metricName]
       timer = @timers[metricName]
       timer.finish()

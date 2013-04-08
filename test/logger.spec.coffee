@@ -2,6 +2,7 @@ global.window = require("jsdom").jsdom().createWindow()
 
 weblog = require('../src/logger')
 Socket = weblog.Socket
+Timer = weblog.Timer
 Logger = weblog.Logger
 
 
@@ -132,6 +133,42 @@ describe 'Logger', ->
 describe 'Socket', ->
   it 'Socket be defined', (done) ->
     expect(weblog.Socket).toBeDefined()
+
+    done()
+
+describe 'Timer', ->
+  timer = null
+
+  beforeEach () ->
+    timer = new Timer
+
+  it 'should default members to undefined', (done) ->
+    timer = new Timer
+    expect(timer.tStart).toBeUndefined()
+    expect(timer.tFinish).toBeUndefined()
+    done()
+
+  it 'should record current time when start is called', (done) ->
+    timer.start()
+
+    expect(timer.tStart).toBe(weblog.epochTimeInSeconds())
+    expect(timer.tFinish).toBeUndefined()
+
+    done()
+
+  it 'should record current time when finish is called', (done) ->
+    timer.finish()
+
+    expect(timer.tStart).toBeUndefined()
+    expect(timer.tFinish).toBe(weblog.epochTimeInSeconds())
+
+    done()
+
+  it 'should compute elapsed time based on start and finish times', (done) ->
+    timer.tStart = 42
+    timer.tFinish = 100
+
+    expect(timer.getElapsedTime()).toBe(58)
 
     done()
 
