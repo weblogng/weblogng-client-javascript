@@ -116,7 +116,7 @@ describe 'Logger', ->
     timer = logger.recordStart(metricName)
 
     expect(timer).toBe(logger.timers[metricName])
-    now = weblog.epochTimeInSeconds()
+    now = weblog.epochTimeInMilliseconds()
     expect(timer.tStart - now).toBeLessThan(2)
     done()
 
@@ -126,7 +126,7 @@ describe 'Logger', ->
     logger.recordStart(metricName)
     timer = logger.recordFinish(metricName)
 
-    now = weblog.epochTimeInSeconds()
+    now = weblog.epochTimeInMilliseconds()
     expect(timer.tFinish - now).toBeLessThan(2)
     done()
 
@@ -151,7 +151,7 @@ describe 'Timer', ->
   it 'should record current time when start is called', (done) ->
     timer.start()
 
-    expect(timer.tStart).toBe(weblog.epochTimeInSeconds())
+    expect(timer.tStart).toBe(weblog.epochTimeInMilliseconds())
     expect(timer.tFinish).toBeUndefined()
 
     done()
@@ -160,7 +160,7 @@ describe 'Timer', ->
     timer.finish()
 
     expect(timer.tStart).toBeUndefined()
-    expect(timer.tFinish).toBe(weblog.epochTimeInSeconds())
+    expect(timer.tFinish).toBe(weblog.epochTimeInMilliseconds())
 
     done()
 

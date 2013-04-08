@@ -6,6 +6,9 @@ weblog.generateUniqueId = (length = 8) ->
   id += Math.random().toString(36).substr(2) while id.length < length
   id.substr 0, length
 
+weblog.epochTimeInMilliseconds = () ->
+  new Date().getTime()
+
 weblog.epochTimeInSeconds = () ->
   Math.round(new Date().getTime() / 1000)
 
@@ -24,11 +27,11 @@ class weblog.Timer
   constructor: () ->
 
   start: () ->
-    @tStart = weblog.epochTimeInSeconds()
+    @tStart = weblog.epochTimeInMilliseconds()
     return
 
   finish: () ->
-    @tFinish = weblog.epochTimeInSeconds()
+    @tFinish = weblog.epochTimeInMilliseconds()
     return
 
   getElapsedTime: () ->
