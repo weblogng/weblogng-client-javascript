@@ -1,21 +1,43 @@
 global.window = require("jsdom").jsdom().createWindow()
 
-#weblog = require('../src/logger')
-Timer = require('../src/logger').Timer
-Logger = require('../src/logger').Logger
-epochTimeInSeconds = require('../src/logger').epochTimeInSeconds
+weblog = require('../src/logger')
+Socket = weblog.Socket
+Logger = weblog.Logger
+
+
+###
+  Create a mock WebSocket implementation to avoid browser-dependencies.
+###
+class MockWS
+  @messages = []
+
+  constructor: (@url) ->
+
+  send: (message) ->
+    @messages.push message
+
+###
+  replace _createWebSocket method on Logger prototype so that we use a mock WebSocket impl
+  instead of the real impl.
+###
+Logger::_createWebSocket = (apiUrl) ->
+  return new MockWS(apiUrl)
 
 describe 'Logger', ->
-
   apiHost = "localhost:9000"
   apiKey = "abcd-1234"
   logger = null
 
-  beforeEach ->
+  beforeEach () ->
     logger = new Logger(apiHost, apiKey)
 
+  it 'Logger be defined', (done) ->
+    expect(weblog.Logger).toBeDefined()
+
+    done()
+
   it 'should set properties', (done) ->
-    logger = new Logger(apiHost, apiKey)
+    logger = new weblog.Logger(apiHost, apiKey)
 
     expect(logger.id).toBeDefined()
     expect(logger.apiHost).toBe(apiHost)
@@ -24,7 +46,6 @@ describe 'Logger', ->
     done()
 
   it 'should print property data in toString', (done) ->
-
     s = logger.toString()
 
     expect(s).toContain(logger.id)
@@ -34,13 +55,11 @@ describe 'Logger', ->
     done()
 
   it 'should build WebSocket urls', (done) ->
-
     expect(logger.apiUrl).toBe("ws://#{apiHost}/log/ws")
 
     done()
 
   it 'should send metrics via the websocket', (done) ->
-
     spyOn(logger.webSocket, 'send')
     spyOn(logger, '_createMetricMessage')
 
@@ -54,7 +73,7 @@ describe 'Logger', ->
   it 'should create a metric message using provided name and value, defaulting to current epoch time', (done) ->
     metricName = "metric_name_" + Math.floor(Math.random() * 1000)
     metricValue = Math.random()
-    timestamp = epochTimeInSeconds()
+    timestamp = weblog.epochTimeInSeconds()
 
     message = logger._createMetricMessage(metricName, metricValue)
 
@@ -96,10 +115,29 @@ describe 'Logger', ->
 #
 #    expect(logger.timers[metricName]).toBeCloseTo(new Date().getTime(), 3)
 
+describe 'Socket', ->
+  it 'Socket be defined', (done) ->
+    expect(weblog.Logger).toBeDefined()
+
     done()
 
 describe 'epochTimeInSeconds', ->
+  it 'epochTimeInSeconds be defined', (done) ->
+    expect(weblog.epochTimeInSeconds).toBeDefined()
+
+    done()
 
   it 'should compute current epoch time, in seconds', (done) ->
-    expect((epochTimeInSeconds() * 1000) - new Date().getTime()).toBeLessThan(1001)
+    expect((weblog.epochTimeInSeconds() * 1000) - new Date().getTime()).toBeLessThan(1001)
+    done()
+
+  it 'should be fast', (done) ->
+    t_start = new Date().getTime()
+    num = 1000
+    while num -= 1
+      timeInSeconds = weblog.epochTimeInSeconds()
+
+    t_elapsed = new Date().getTime() - t_start
+    expect(t_elapsed).toBeLessThan(1000)
+
     done()

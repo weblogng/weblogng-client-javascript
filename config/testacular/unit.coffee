@@ -6,7 +6,7 @@ basePath = '../../'
 # list of files / patterns to load in the browser
 files = [
   'build/development/js/*.js'
-  'test/**/*.coffee'
+  'build/test/js/logger.spec.js'
   #'test/unit/**/*.coffee'
 ]
 
@@ -26,7 +26,7 @@ browsers = ['PhantomJS']
 singleRun = false
 
 # cli runner port
-runnerPort = 9201
+runnerPort = 9100
 
 # web server port
 port = 9878
@@ -40,11 +40,13 @@ proxies = {
 }
 
 junitReporter = {
-  outputFile: 'test_out/e2e.xml',
-  suite: 'e2e'
+  outputFile: 'test_out/unit.xml',
+  suite: 'unit'
 }
 
 preprocessors = 
   '**/*.coffee': 'coffee'
 
 logLevel = LOG_DEBUG
+
+background = true
