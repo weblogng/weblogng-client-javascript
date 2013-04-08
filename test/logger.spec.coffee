@@ -130,6 +130,19 @@ describe 'Logger', ->
     expect(timer.tFinish - now).toBeLessThan(2)
     done()
 
+  it 'should call recordFinish and send metric when recordFinishAndSendMetric is called', (done) ->
+    metric_name = 'some-important-operation'
+    timer = logger.recordStart(metric_name)
+
+    spyOn(logger, 'sendMetric')
+
+    logger.recordFinishAndSendMetric(metric_name)
+
+    expect(logger.sendMetric).toHaveBeenCalledWith(metric_name, timer.getElapsedTime())
+
+    done()
+
+
 describe 'Socket', ->
   it 'Socket be defined', (done) ->
     expect(weblog.Socket).toBeDefined()

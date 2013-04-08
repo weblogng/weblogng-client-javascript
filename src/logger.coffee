@@ -72,5 +72,13 @@ class weblog.Logger
     else
       return null
 
+  recordFinishAndSendMetric: (metricName) ->
+    timer = @recordFinish(metricName)
+
+    if timer
+      @sendMetric(metricName, timer.getElapsedTime())
+
+    return
+
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"
