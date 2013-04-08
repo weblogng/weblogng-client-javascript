@@ -109,15 +109,29 @@ describe 'Logger', ->
 
     done()
 
-  it 'should record the current time when startTiming is called for a given metric name', (done) ->
+  it 'should record the current time when recordStart is called for a given metric name', (done) ->
     metricName = 'save'
-#    logger.recordStart(metricName)
-#
-#    expect(logger.timers[metricName]).toBeCloseTo(new Date().getTime(), 3)
+
+    timer = logger.recordStart(metricName)
+
+    expect(timer).toBe(logger.timers[metricName])
+    now = weblog.epochTimeInSeconds()
+    expect(timer.tStart - now).toBeLessThan(2)
+    done()
+
+  it 'should record the current time when recordFinish is called for a given metric name', (done) ->
+    metricName = 'save'
+
+    logger.recordStart(metricName)
+    timer = logger.recordFinish(metricName)
+
+    now = weblog.epochTimeInSeconds()
+    expect(timer.tFinish - now).toBeLessThan(2)
+    done()
 
 describe 'Socket', ->
   it 'Socket be defined', (done) ->
-    expect(weblog.Logger).toBeDefined()
+    expect(weblog.Socket).toBeDefined()
 
     done()
 
