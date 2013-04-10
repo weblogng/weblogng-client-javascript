@@ -80,5 +80,13 @@ class weblog.Logger
 
     return
 
+  executeWithTiming: (metric_name, function_to_exec) ->
+    if function_to_exec
+      @recordStart(metric_name)
+      function_to_exec()
+      @recordFinishAndSendMetric(metric_name)
+
+    return
+
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"

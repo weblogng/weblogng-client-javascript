@@ -142,6 +142,22 @@ describe 'Logger', ->
 
     done()
 
+  it '#time should execute provided method with timing instrumentation', (done) ->
+    executed = false
+    my_awesome_function = ->
+      executed = true
+      console.log("executed my_awesome_function")
+      return
+
+    metric_name = "some_operation"
+    spyOn(logger, 'recordStart')
+    spyOn(logger, 'recordFinishAndSendMetric')
+
+    logger.executeWithTiming(metric_name, my_awesome_function)
+
+    expect(logger.recordStart).toHaveBeenCalledWith(metric_name)
+    expect(logger.recordFinishAndSendMetric).toHaveBeenCalledWith(metric_name)
+    done()
 
 describe 'Socket', ->
   it 'Socket be defined', (done) ->
