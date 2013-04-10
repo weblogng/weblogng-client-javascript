@@ -139,6 +139,7 @@ describe 'Logger', ->
     logger.recordFinishAndSendMetric(metric_name)
 
     expect(logger.sendMetric).toHaveBeenCalledWith(metric_name, timer.getElapsedTime())
+    expect(logger.timers[metric_name]).toBeUndefined()
 
     done()
 
@@ -146,7 +147,6 @@ describe 'Logger', ->
     executed = false
     my_awesome_function = ->
       executed = true
-      console.log("executed my_awesome_function")
       return
 
     metric_name = "some_operation"
@@ -155,8 +155,27 @@ describe 'Logger', ->
 
     logger.executeWithTiming(metric_name, my_awesome_function)
 
+    expect(executed).toBeTruthy()
     expect(logger.recordStart).toHaveBeenCalledWith(metric_name)
     expect(logger.recordFinishAndSendMetric).toHaveBeenCalledWith(metric_name)
+    done()
+
+  it '#time should not leak memory when provided method throws exception', (done) ->
+    executed = false
+    my_terrible_function = ->
+      executed = true
+      throw new Error("my_terrible_function is terrible!")
+
+    metric_name = "some_operation"
+    spyOn(logger, 'recordStart')
+    spyOn(logger, 'recordFinishAndSendMetric')
+
+    logger.executeWithTiming(metric_name, my_terrible_function)
+
+    expect(executed).toBeTruthy()
+    expect(logger.timers[metric_name]).toBeUndefined()
+    expect(logger.recordStart).toHaveBeenCalledWith(metric_name)
+    expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
     done()
 
 describe 'Socket', ->

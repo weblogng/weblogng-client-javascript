@@ -77,14 +77,18 @@ class weblog.Logger
 
     if timer
       @sendMetric(metricName, timer.getElapsedTime())
+      delete @timers[metricName]
 
     return
 
   executeWithTiming: (metric_name, function_to_exec) ->
     if function_to_exec
       @recordStart(metric_name)
-      function_to_exec()
-      @recordFinishAndSendMetric(metric_name)
+      try
+        function_to_exec()
+        @recordFinishAndSendMetric(metric_name)
+      catch error
+        delete @timers[metric_name]
 
     return
 
