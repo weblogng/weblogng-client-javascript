@@ -20,8 +20,30 @@ class weblog.Socket
     WS = if window['MozWebSocket'] then MozWebSocket else window['WebSocket']
     @socket = new WS(apiUrl)
 
+  _waitForSocketConnection: (socket, callback, attemptsRemaining) ->
+    attemptsRemaining--
+
+    setTimeout ->
+      if socket.readyState is 1
+        callback() if callback?
+        return
+      else
+        if attemptsRemaining > 0
+          #console.log "socket was not ready, re-scheduling"
+          _waitForSocketConnection socket, callback, attemptsRemaining
+        else
+          #console.log "socket was not ready and no attempts remain; giving-up"
+    , 1000
+    return
+
   send: (message) ->
-    @socket.send(message)
+    socket = @socket
+
+    onSuccessfulConnection = ->
+      socket.send(message)
+
+    @_waitForSocketConnection(@socket, onSuccessfulConnection, 5)
+    return
 
 class weblog.Timer
   constructor: () ->
