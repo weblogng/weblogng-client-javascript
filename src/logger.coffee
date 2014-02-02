@@ -49,7 +49,7 @@ class weblog.Logger
     @webSocket.send(metricMessage)
 
   _createWebSocket: (apiUrl) ->
-    return new weblog.Socket(@apiUrl)
+    return new weblog.Socket(apiUrl)
 
   _createMetricMessage: (metricName, metricValue, timestamp = weblog.epochTimeInSeconds()) ->
     sanitizedMetricName = @_sanitizeMetricName(metricName)
