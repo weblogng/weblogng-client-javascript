@@ -5,17 +5,18 @@ module.exports = function(config) {
   config.set({
 
     // base path, that will be used to resolve files and exclude
-    basePath: '../',
+    basePath: '.',
 
 
     // frameworks to use
-    frameworks: ['jasmine', 'requirejs'],
+    frameworks: ['requirejs', 'jasmine'],
 
 
     // list of files / patterns to load in the browser
     files: [
       'build/development/js/*.js',
-      'build/test/js/*.spec.js'
+      'build/test/js/*.spec.js',
+      'build/test/js/test-main.js'
     ],
 
 

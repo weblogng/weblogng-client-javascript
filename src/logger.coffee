@@ -25,6 +25,7 @@ class weblog.Socket
 
     setTimeout ->
       if socket.readyState is 1
+        console.log "added requirejs framework"
         callback() if callback?
         return
       else

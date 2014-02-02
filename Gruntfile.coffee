@@ -51,7 +51,7 @@ module.exports = (grunt) ->
 
     karma:
       options:
-        configFile: 'config/karma.conf.js'
+        configFile: 'karma.conf.js'
       unit:
         background: true
       continuous:
