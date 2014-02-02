@@ -1,3 +1,4 @@
+global = global || {}
 global.window = require("jsdom").jsdom().createWindow()
 
 weblog = require('../src/logger')
