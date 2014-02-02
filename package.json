@@ -1,13 +1,13 @@
 {
-  "name": "weblog-ng-logging-standalone",
-  "version": "0.1.0",
-  "description": "weblog-ng standalone logging library",
+  "name": "weblog-ng-client",
+  "version": "0.1.1",
+  "description": "WeblogNG standalone logging library",
   "scripts": {
     "test": "grunt test"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/qualimente/weblog-ng-logging-standalone.git"
+    "url": "git@bitbucket.org:beardedrobotllc/weblog-ng-client-javascript.git"
   },
   "author": "skuenzli",
   "devDependencies": {
