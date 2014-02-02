@@ -21,6 +21,7 @@
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-watch": "~0.5.2",
     "grunt-karma": "~0.6.2",
+    "jsdom": "~0.8.11",
     "karma": "~0.10.8",
     "karma-jasmine": "~0.1.5",
     "karma-script-launcher": "~0.1.0",
