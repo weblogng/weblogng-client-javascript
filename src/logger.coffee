@@ -29,10 +29,10 @@ class weblog.Socket
         return
       else
         if attemptsRemaining > 0
-          #console.log "socket was not ready, re-scheduling"
-          _waitForSocketConnection socket, callback, attemptsRemaining
+          console.log "WeblogNG: websocket was not ready, #{attemptsRemaining} re-scheduling"
+          @_waitForSocketConnection socket, callback, attemptsRemaining
         else
-          #console.log "socket was not ready and no attempts remain; giving-up"
+          console.log "WeblogNG: websocket was not ready and no attempts remain; giving-up"
     , 1000
     return
 
