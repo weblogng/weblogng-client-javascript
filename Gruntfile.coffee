@@ -50,10 +50,13 @@ module.exports = (grunt) ->
           base: "./#{DEV_PATH}"
 
     karma:
+      options:
+        configFile: 'config/karma.conf.js'
       unit:
         background: true
-        options:
-          configFile: 'config/testacular/unit.js'
+      continuous:
+        singleRun: true
+        browsers: ['PhantomJS']
 
     watch:
       coffee:
@@ -62,9 +65,6 @@ module.exports = (grunt) ->
       concat:
         files: ['vendor/script/**/*.js', 'vendor/style/**/*.css']
         tasks: 'concat:development'
-      config:
-        files: ['config/testacular/*.coffee']
-        tasks: 'coffee:config'
       copy:
         files: ['src/app.html']
         tasks: 'copy:development'
@@ -93,7 +93,7 @@ module.exports = (grunt) ->
     'copy:development'
   ]
 
-  grunt.registerTask 'test', 'karma'
+  grunt.registerTask 'test', 'karma:unit:run'
 
   grunt.registerTask 'default', [
     'config'
