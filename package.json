@@ -1,7 +1,7 @@
 {
   "name": "logger",
   "description": "WeblogNG Client Library",
-  "version": "0.1.0",
+  "version": "0.3.0-SNAPSHOT",
   "engines": {
     "node": ">= 0.8.0"
   },
@@ -9,9 +9,9 @@
     "test": "grunt jasmine"
   },
   "author": {
-    "name": "Author Name",
-    "email": "email@domain.com",
-    "url": "http://bower.io/"
+    "name": "Stephen Kuenzli",
+    "email": "skuenzli@qualimente.com",
+    "url": "http://weblog-ng-ui.herokuapp.com"
   },
   "licenses": [
     {
