@@ -1,21 +1,18 @@
-weblog = this
-window?.weblog = weblog
-
-weblog.generateUniqueId = (length = 8) ->
+generateUniqueId = (length = 8) ->
   id = ""
   id += Math.random().toString(36).substr(2) while id.length < length
   id.substr 0, length
 
-weblog.epochTimeInMilliseconds = () ->
+epochTimeInMilliseconds = () ->
   new Date().getTime()
 
-weblog.epochTimeInSeconds = () ->
+epochTimeInSeconds = () ->
   Math.round(new Date().getTime() / 1000)
 
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
 ###
-class weblog.Socket
+class Socket
   constructor: (apiUrl) ->
     WS = if window['MozWebSocket'] then MozWebSocket else window['WebSocket']
     @socket = new WS(apiUrl)
@@ -45,23 +42,23 @@ class weblog.Socket
     @_waitForSocketConnection(@socket, onSuccessfulConnection, 5)
     return
 
-class weblog.Timer
+class Timer
   constructor: () ->
 
   start: () ->
-    @tStart = weblog.epochTimeInMilliseconds()
+    @tStart = epochTimeInMilliseconds()
     return
 
   finish: () ->
-    @tFinish = weblog.epochTimeInMilliseconds()
+    @tFinish = epochTimeInMilliseconds()
     return
 
   getElapsedTime: () ->
     return @tFinish - @tStart
 
-class weblog.Logger
+class Logger
   constructor: (@apiHost, @apiKey) ->
-    @id = weblog.generateUniqueId()
+    @id = generateUniqueId()
     @apiUrl = "ws://#{apiHost}/log/ws"
     @webSocket = @_createWebSocket(@apiUrl)
     @timers = {}
@@ -71,9 +68,9 @@ class weblog.Logger
     @webSocket.send(metricMessage)
 
   _createWebSocket: (apiUrl) ->
-    return new weblog.Socket(apiUrl)
+    return new Socket(apiUrl)
 
-  _createMetricMessage: (metricName, metricValue, timestamp = weblog.epochTimeInSeconds()) ->
+  _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInSeconds()) ->
     sanitizedMetricName = @_sanitizeMetricName(metricName)
     return "v1.metric #{@apiKey} #{sanitizedMetricName} #{metricValue} #{timestamp}"
 
@@ -81,7 +78,7 @@ class weblog.Logger
     metricName.replace /[^\w\d_-]/g, '_'
 
   recordStart: (metricName) ->
-    timer = new weblog.Timer()
+    timer = new Timer()
     timer.start()
     @timers[metricName] = timer
     return timer
