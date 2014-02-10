@@ -1,0 +1,7 @@
+{
+  "name": "logger",
+  "dependencies": {
+    "requirejs": "~2.1.5",
+    "jasmine": "~1.3.1"
+  }
+}
