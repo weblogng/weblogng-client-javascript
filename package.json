@@ -19,8 +19,11 @@
       "url": "https://github.com/danheberden/gith/blob/master/LICENSE-MIT"
     }
   ],
+  "repository": {
+    "type" : "git"
+    , "url" : "git@bitbucket.org:beardedrobotllc/weblog-ng-client-javascript.git"
+  },
   "devDependencies": {
-    "jsdom": "~0.8.11",
     "grunt-contrib-coffee": "~0.7.0",
     "grunt-contrib-copy": "~0.5.0",
     "grunt-contrib-jshint": "~0.1.1",
