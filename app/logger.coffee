@@ -102,12 +102,13 @@ class Logger
 
   executeWithTiming: (metric_name, function_to_exec) ->
     if function_to_exec
-      @recordStart(metric_name)
+      timer = new Timer()
+      timer.start()
       try
         function_to_exec()
-        @recordFinishAndSendMetric(metric_name)
+        timer.finish()
+        @sendMetric(metric_name, timer.getElapsedTime())
       catch error
-        delete @timers[metric_name]
 
     return
 
