@@ -136,14 +136,16 @@ define ["logger"], (logger) ->
         return
 
       metric_name = "some_operation"
+      spyOn(logger, 'sendMetric')
       spyOn(logger, 'recordStart')
       spyOn(logger, 'recordFinishAndSendMetric')
 
       logger.executeWithTiming(metric_name, my_awesome_function)
 
       expect(executed).toBeTruthy()
-      expect(logger.recordStart).toHaveBeenCalledWith(metric_name)
-      expect(logger.recordFinishAndSendMetric).toHaveBeenCalledWith(metric_name)
+      expect(logger.sendMetric).toHaveBeenCalledWith(metric_name, 0)
+      expect(logger.recordStart).not.toHaveBeenCalled()
+      expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
     it '#time should not leak memory when provided method throws exception', ->
       executed = false
@@ -159,7 +161,7 @@ define ["logger"], (logger) ->
 
       expect(executed).toBeTruthy()
       expect(logger.timers[metric_name]).toBeUndefined()
-      expect(logger.recordStart).toHaveBeenCalledWith(metric_name)
+      expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
   describe 'Socket', ->
@@ -207,6 +209,7 @@ define ["logger"], (logger) ->
       num = 1000
       while num -= 1
         timeInSeconds = epochTimeInSeconds()
+        expect(timeInSeconds).toBeDefined()
 
       t_elapsed = new Date().getTime() - t_start
       expect(t_elapsed).toBeLessThan(1000)
