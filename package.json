@@ -1,5 +1,5 @@
 {
-  "name": "logger",
+  "name": "weblogng-logger",
   "description": "WeblogNG Client Library",
   "version": "0.3.0-SNAPSHOT",
   "engines": {
