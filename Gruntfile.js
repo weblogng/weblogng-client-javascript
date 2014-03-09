@@ -32,7 +32,7 @@ module.exports = function (grunt) {
       },
       development: {
         options: {
-          bare: true
+          bare: false
         },
         files: {
           'dist/app/logger.js': ['app/logger.coffee']

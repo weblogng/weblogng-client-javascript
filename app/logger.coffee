@@ -1,18 +1,21 @@
-generateUniqueId = (length = 8) ->
+weblogng = this
+window?.weblogng = weblogng
+
+weblogng.generateUniqueId = (length = 8) ->
   id = ""
   id += Math.random().toString(36).substr(2) while id.length < length
   id.substr 0, length
 
-epochTimeInMilliseconds = () ->
+weblogng.epochTimeInMilliseconds = () ->
   new Date().getTime()
 
-epochTimeInSeconds = () ->
+weblogng.epochTimeInSeconds = () ->
   Math.round(new Date().getTime() / 1000)
 
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
 ###
-class Socket
+class weblogng.Socket
   constructor: (apiUrl) ->
     WS = if window['MozWebSocket'] then MozWebSocket else window['WebSocket']
     @socket = new WS(apiUrl)
@@ -42,7 +45,7 @@ class Socket
     @_waitForSocketConnection(@socket, onSuccessfulConnection, 5)
     return
 
-class Timer
+class weblogng.Timer
   constructor: () ->
 
   start: () ->
@@ -56,7 +59,7 @@ class Timer
   getElapsedTime: () ->
     return @tFinish - @tStart
 
-class Logger
+class weblogng.Logger
   constructor: (@apiHost, @apiKey) ->
     @id = generateUniqueId()
     @apiUrl = "ws://#{apiHost}/log/ws"
@@ -68,7 +71,7 @@ class Logger
     @webSocket.send(metricMessage)
 
   _createWebSocket: (apiUrl) ->
-    return new Socket(apiUrl)
+    return new weblogng.Socket(apiUrl)
 
   _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInSeconds()) ->
     sanitizedMetricName = @_sanitizeMetricName(metricName)
@@ -78,7 +81,7 @@ class Logger
     metricName.replace /[^\w\d_-]/g, '_'
 
   recordStart: (metricName) ->
-    timer = new Timer()
+    timer = new weblogng.Timer()
     timer.start()
     @timers[metricName] = timer
     return timer
@@ -102,7 +105,7 @@ class Logger
 
   executeWithTiming: (metric_name, function_to_exec) ->
     if function_to_exec
-      timer = new Timer()
+      timer = new weblogng.Timer()
       timer.start()
       try
         function_to_exec()
