@@ -1,7 +1,7 @@
 {
   "name": "weblogng-logger",
   "description": "WeblogNG Client Library",
-  "version": "0.3.0-SNAPSHOT",
+  "version": "0.3.0",
   "engines": {
     "node": ">= 0.8.0"
   },
