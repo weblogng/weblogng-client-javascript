@@ -1,7 +1,5 @@
 define ["logger"], (logger) ->
 
-
-
   ###
     Create a mock WebSocket implementation to avoid browser-dependencies.
   ###
@@ -38,9 +36,11 @@ define ["logger"], (logger) ->
     apiHost = "localhost:9000"
     apiKey = "abcd-1234"
     logger = null
+    window = null
 
     beforeEach () ->
       logger = new Logger(apiHost, apiKey)
+      window = {}
 
     it 'Logger be defined',  ->
       expect(Logger).toBeDefined()
@@ -67,6 +67,21 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: false})
 
       expect(logger.publishNavigationTimingMetrics).toBeFalsy()
+
+#    it 'should _initNavigationTimingPublishProcess when publishNavigationTimingMetrics is true and navigation timing api is available', ->
+#      # useful references:
+#      #   https://github.com/pivotal/jasmine/wiki/Spies
+#      #   http://stackoverflow.com/questions/9347631/spying-on-a-constructor-using-jasmine
+#      window.performance = {timing: 'available'}
+#
+#      spyOn(weblogng, 'Logger').andCallThrough()
+#
+#      options = {publishNavigationTimingMetrics: true}
+#      logger = new weblogng.Logger(apiHost, apiKey, options)
+#
+#      expect(weblogng.Logger).toHaveBeenCalledWith(apiHost, apiKey, options)
+#      expect(logger instanceof weblogng.Logger).toBeTruthy()
+#      expect(weblogng.Logger._initNavigationTimingPublishProcess).toHaveBeenCalled()
 
     it 'should print property data in toString', ->
       s = logger.toString()
@@ -182,57 +197,57 @@ define ["logger"], (logger) ->
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
-    describe 'Timing API helpers', ->
+  describe 'Timing API helpers', ->
 
+    timing = {}
+
+    beforeEach () ->
+      window.performance = window.mozPerformance = window.msPerformance = window.webkitPerformance = undefined
       timing = {}
 
-      beforeEach () ->
-        window.performance = window.mozPerformance = window.msPerformance = window.webkitPerformance = undefined
-        timing = {}
+    it 'locatePerformanceObject should return undefined when performance object is not present', ->
 
-      it 'locatePerformanceObject should return undefined when performance object is not present', ->
+      expect(locatePerformanceObject()).toBeUndefined()
+      expect(hasNavigationTimingAPI()).toBeFalsy()
 
-        expect(Logger.locatePerformanceObject()).toBeUndefined()
-        expect(Logger.hasNavigationTimingAPI()).toBeFalsy()
+    it 'hasNavigationTimingAPI should return false when performance object is defined, but timing is not', ->
+      # note: not sure if performance would ever be defined without timing in real-life
+      performanceObject = {vendor: 'standard'}
+      window.performance = performanceObject
 
-      it 'hasNavigationTimingAPI should return false when performance object is defined, but timing is not', ->
-        # note: not sure if performance would ever be defined without timing in real-life
-        performanceObject = {vendor: 'standard'}
-        window.performance = performanceObject
+      expect(locatePerformanceObject()).toBeDefined()
+      expect(hasNavigationTimingAPI()).toBeFalsy()
 
-        expect(Logger.locatePerformanceObject()).toBeDefined()
-        expect(Logger.hasNavigationTimingAPI()).toBeFalsy()
+    it 'locatePerformanceObject should find the performance object in its standard location', ->
+      performanceObject = {vendor: 'standard', timing: timing}
+      window.performance = performanceObject
 
-      it 'locatePerformanceObject should find the performance object in its standard location', ->
-        performanceObject = {vendor: 'standard', timing: timing}
-        window.performance = performanceObject
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
 
-        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
-        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+    it 'locatePerformanceObject should find the performance object in its mozilla-specific location', ->
+      performanceObject = {vendor: 'mozilla', timing: timing}
+      window.mozPerformance = performanceObject
 
-      it 'locatePerformanceObject should find the performance object in its mozilla-specific location', ->
-        performanceObject = {vendor: 'mozilla', timing: timing}
-        window.mozPerformance = performanceObject
+      expect(window.performance).toBeUndefined()
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
 
-        expect(window.performance).toBeUndefined()
-        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
-        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+    it 'locatePerformanceObject should find the performance object in its microsoft-specific location', ->
+      performanceObject = {vendor: 'microsoft', timing: timing}
+      window.msPerformance = performanceObject
 
-      it 'locatePerformanceObject should find the performance object in its microsoft-specific location', ->
-        performanceObject = {vendor: 'microsoft', timing: timing}
-        window.msPerformance = performanceObject
+      expect(window.performance).toBeUndefined()
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
 
-        expect(window.performance).toBeUndefined()
-        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
-        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+    it 'locatePerformanceObject should find the performance object in its webkit-specific location', ->
+      performanceObject = {vendor: 'webkit', timing: timing}
+      window.webkitPerformance = performanceObject
 
-      it 'locatePerformanceObject should find the performance object in its webkit-specific location', ->
-        performanceObject = {vendor: 'webkit', timing: timing}
-        window.webkitPerformance = performanceObject
-
-        expect(window.performance).toBeUndefined()
-        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
-        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+      expect(window.performance).toBeUndefined()
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
 
 
   describe 'Socket', ->

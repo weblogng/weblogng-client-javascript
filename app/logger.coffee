@@ -12,6 +12,16 @@ weblogng.epochTimeInMilliseconds = () ->
 weblogng.epochTimeInSeconds = () ->
   Math.round(new Date().getTime() / 1000)
 
+weblogng.locatePerformanceObject = () ->
+  return window.performance || window.mozPerformance || window.msPerformance || window.webkitPerformance
+
+weblogng.hasNavigationTimingAPI = () ->
+  if locatePerformanceObject()?.timing
+    return true
+  else
+    return false
+
+
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
 ###
@@ -68,14 +78,9 @@ class weblogng.Logger
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
 
-  @locatePerformanceObject: () ->
-    return window.performance || window.mozPerformance || window.msPerformance || window.webkitPerformance
+    if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
+      @_initNavigationTimingPublishProcess()
 
-  @hasNavigationTimingAPI: () ->
-    if @locatePerformanceObject()?.timing
-      return true
-    else
-      return false
 
   sendMetric: (metricName, metricValue) ->
     metricMessage = @_createMetricMessage(metricName, metricValue)
@@ -125,6 +130,11 @@ class weblogng.Logger
       catch error
 
     return
+
+  _initNavigationTimingPublishProcess: () ->
+
+    return
+
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"
