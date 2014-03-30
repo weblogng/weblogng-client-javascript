@@ -145,7 +145,7 @@ define ["logger"], (logger) ->
       expect(logger.sendMetric).toHaveBeenCalledWith(metric_name, timer.getElapsedTime())
       expect(logger.timers[metric_name]).toBeUndefined()
 
-    it '#time should execute provided method with timing instrumentation', ->
+    it 'executeWithTiming should execute provided method with timing instrumentation', ->
       executed = false
       my_awesome_function = ->
         executed = true
@@ -163,7 +163,7 @@ define ["logger"], (logger) ->
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
-    it '#time should not leak memory when provided method throws exception', ->
+    it 'executeWithTiming should not leak memory when provided method throws exception', ->
       executed = false
       my_terrible_function = ->
         executed = true
