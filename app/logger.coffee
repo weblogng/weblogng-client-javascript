@@ -131,7 +131,18 @@ class weblogng.Logger
 
     return
 
+  _pageNameFactory: () ->
+    return location.pathname
+
   _initNavigationTimingPublishProcess: () ->
+
+    if not hasNavigationTimingAPI()
+      return
+
+    if "complete" == document.readyState
+      performance = locatePerformanceObject()
+      pageLoadTime = (performance.timing.loadEventStart - performance.timing.navigationStart)
+      @sendMetric(@_pageNameFactory() + "-page_load_time", pageLoadTime)
 
     return
 

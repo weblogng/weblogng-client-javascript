@@ -197,9 +197,60 @@ define ["logger"], (logger) ->
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
+  describe 'Logger#_initNavigationTimingPublishProcess', ->
+    logger = null
+    timing = null
+    apiHost = "localhost:9000"
+    apiKey = "abcd-1234"
+
+
+    beforeEach () ->
+      logger = new Logger(apiHost, apiKey)
+      window.performance = window.mozPerformance = window.msPerformance = window.webkitPerformance = undefined
+      timing = {}
+
+    it 'should return when Navigation Timing API is unavailable', ->
+      window.performance = undefined
+
+      expect(hasNavigationTimingAPI()).toBeFalsy()
+
+      spyOn(logger, '_pageNameFactory')
+      spyOn(logger, 'sendMetric')
+
+      logger._initNavigationTimingPublishProcess()
+
+      expect(logger._pageNameFactory).not.toHaveBeenCalled()
+      expect(logger.sendMetric).not.toHaveBeenCalled()
+
+    it 'should publish Navigation Timing stats if document is in "complete" state', ->
+      document.readyState = "complete"
+
+      timing = {
+        navigationStart: 1, loadEventStart: 43
+      }
+      window.performance = {vendor: 'standard', timing: timing}
+
+      expect(window).toBeDefined()
+      expect(window.performance).toBeDefined()
+      expect(window.performance.timing).toBe(timing)
+
+      expect(weblogng.locatePerformanceObject()).toBe(window.performance)
+      expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
+
+      pageName = 'weblog-ng-ui-mypage'
+      spyOn(logger, '_pageNameFactory').andReturn(pageName)
+      spyOn(logger, 'sendMetric')
+
+      logger._initNavigationTimingPublishProcess()
+
+      expect(hasNavigationTimingAPI()).toBeTruthy()
+
+      expect(logger._pageNameFactory).toHaveBeenCalled()
+      expect(logger.sendMetric).toHaveBeenCalledWith(pageName + "-page_load_time", 42)
+
   describe 'Timing API helpers', ->
 
-    timing = {}
+    timing = null
 
     beforeEach () ->
       window.performance = window.mozPerformance = window.msPerformance = window.webkitPerformance = undefined
@@ -248,7 +299,6 @@ define ["logger"], (logger) ->
       expect(window.performance).toBeUndefined()
       expect(locatePerformanceObject()).toBe(performanceObject)
       expect(hasNavigationTimingAPI()).toBeTruthy()
-
 
   describe 'Socket', ->
     it 'Socket be defined', ->
