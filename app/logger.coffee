@@ -68,6 +68,15 @@ class weblogng.Logger
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
 
+  @locatePerformanceObject: () ->
+    return window.performance || window.mozPerformance || window.msPerformance || window.webkitPerformance
+
+  @hasNavigationTimingAPI: () ->
+    if @locatePerformanceObject()?.timing
+      return true
+    else
+      return false
+
   sendMetric: (metricName, metricValue) ->
     metricMessage = @_createMetricMessage(metricName, metricValue)
     @webSocket.send(metricMessage)

@@ -1,5 +1,7 @@
 define ["logger"], (logger) ->
 
+
+
   ###
     Create a mock WebSocket implementation to avoid browser-dependencies.
   ###
@@ -179,6 +181,51 @@ define ["logger"], (logger) ->
       expect(logger.timers[metric_name]).toBeUndefined()
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
+
+    describe 'Timing API helpers', ->
+
+      timing = {}
+
+      beforeEach () ->
+        window.performance = window.mozPerformance = window.msPerformance = window.webkitPerformance = undefined
+        timing = {}
+
+      it 'locatePerformanceObject should return undefined when performance object is not present', ->
+
+        expect(Logger.locatePerformanceObject()).toBeUndefined()
+        expect(Logger.hasNavigationTimingAPI()).toBeFalsy()
+
+      it 'locatePerformanceObject should find the performance object in its standard location', ->
+        performanceObject = {vendor: 'standard', timing: timing}
+        window.performance = performanceObject
+
+        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
+        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+
+      it 'locatePerformanceObject should find the performance object in its mozilla-specific location', ->
+        performanceObject = {vendor: 'mozilla', timing: timing}
+        window.mozPerformance = performanceObject
+
+        expect(window.performance).toBeUndefined()
+        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
+        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+
+      it 'locatePerformanceObject should find the performance object in its microsoft-specific location', ->
+        performanceObject = {vendor: 'microsoft', timing: timing}
+        window.msPerformance = performanceObject
+
+        expect(window.performance).toBeUndefined()
+        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
+        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+
+      it 'locatePerformanceObject should find the performance object in its webkit-specific location', ->
+        performanceObject = {vendor: 'webkit', timing: timing}
+        window.webkitPerformance = performanceObject
+
+        expect(window.performance).toBeUndefined()
+        expect(Logger.locatePerformanceObject()).toBe(performanceObject)
+        expect(Logger.hasNavigationTimingAPI()).toBeTruthy()
+
 
   describe 'Socket', ->
     it 'Socket be defined', ->
