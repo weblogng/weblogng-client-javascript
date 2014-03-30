@@ -43,12 +43,28 @@ define ["logger"], (logger) ->
     it 'Logger be defined',  ->
       expect(Logger).toBeDefined()
 
-    it 'should set properties', ->
-      logger = new Logger(apiHost, apiKey)
+    it 'should set properties via constructor', ->
+      options = {}
+      logger = new Logger(apiHost, apiKey, options)
 
       expect(logger.id).toBeDefined()
       expect(logger.apiHost).toBe(apiHost)
       expect(logger.apiKey).toBe(apiKey)
+      expect(logger.options).toBe(options)
+
+    it 'should use default values for unspecified options', ->
+      logger = new Logger(apiHost, apiKey)
+
+      expect(logger.publishNavigationTimingMetrics).toBeTruthy()
+
+    it 'should use publishNavigationTimingMetrics option when specified', ->
+      logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: true})
+
+      expect(logger.publishNavigationTimingMetrics).toBeTruthy()
+
+      logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: false})
+
+      expect(logger.publishNavigationTimingMetrics).toBeFalsy()
 
     it 'should print property data in toString', ->
       s = logger.toString()
@@ -189,7 +205,7 @@ define ["logger"], (logger) ->
       timer.finish()
 
       expect(timer.tStart).toBeUndefined()
-      expect(timer.tFinish).toBe(epochTimeInMilliseconds())
+      expect(timer.tFinish).toBeLessThan(epochTimeInMilliseconds() + 1)
 
     it 'should compute elapsed time based on start and finish times', ->
       timer.tStart = 42
