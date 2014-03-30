@@ -195,6 +195,14 @@ define ["logger"], (logger) ->
         expect(Logger.locatePerformanceObject()).toBeUndefined()
         expect(Logger.hasNavigationTimingAPI()).toBeFalsy()
 
+      it 'hasNavigationTimingAPI should return false when performance object is defined, but timing is not', ->
+        # note: not sure if performance would ever be defined without timing in real-life
+        performanceObject = {vendor: 'standard'}
+        window.performance = performanceObject
+
+        expect(Logger.locatePerformanceObject()).toBeDefined()
+        expect(Logger.hasNavigationTimingAPI()).toBeFalsy()
+
       it 'locatePerformanceObject should find the performance object in its standard location', ->
         performanceObject = {vendor: 'standard', timing: timing}
         window.performance = performanceObject
