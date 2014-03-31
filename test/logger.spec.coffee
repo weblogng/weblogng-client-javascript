@@ -18,6 +18,22 @@ define ["logger"], (logger) ->
   Logger::_createWebSocket = (apiUrl) ->
     return new MockWS(apiUrl)
 
+  describe "Verify utility functions in WeblogNG client library exist", ->
+    it "generateUniqueId should be defined", ->
+      expect(generateUniqueId).toBeDefined()
+
+    it "epochTimeInMilliseconds should be defined", ->
+      expect(epochTimeInMilliseconds).toBeDefined()
+
+    it "epochTimeInSeconds should be defined", ->
+      expect(epochTimeInSeconds).toBeDefined()
+
+    it "locatePerformanceObject should be defined", ->
+      expect(locatePerformanceObject).toBeDefined()
+
+    it "hasNavigationTimingAPI should be defined", ->
+      expect(hasNavigationTimingAPI).toBeDefined()
+
   describe "Verify main classes in WeblogNG client library exist", ->
     it "Logger should be defined", ->
       console.log "Logger: " + Logger
