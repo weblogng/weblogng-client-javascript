@@ -86,13 +86,21 @@ class weblogng.Timer
     return @tFinish - @tStart
 
 class weblogng.Logger
-  constructor: (@apiHost, @apiKey, @options = {publishNavigationTimingMetrics: true}) ->
+  constructor: (@apiHost, @apiKey, @options = {
+    publishNavigationTimingMetrics: true
+    , metricNamePrefix: ""
+  }) ->
     @id = generateUniqueId()
     @apiUrl = "ws://#{apiHost}/log/ws"
     @webSocket = @_createWebSocket(@apiUrl)
     @timers = {}
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
+
+    if @options && @options.metricNamePrefix
+      @metricNamePrefix = @options.metricNamePrefix
+    else
+      @metricNamePrefix = ""
 
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()

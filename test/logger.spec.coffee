@@ -68,6 +68,7 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey)
 
       expect(logger.publishNavigationTimingMetrics).toBeTruthy()
+      expect(logger.metricNamePrefix).toBe("")
 
     it 'should use publishNavigationTimingMetrics option when specified', ->
       logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: true})
@@ -77,6 +78,12 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: false})
 
       expect(logger.publishNavigationTimingMetrics).toBeFalsy()
+
+    it 'should use metricNamePrefix option when specified', ->
+      expectedPrefix = "unit-test"
+      logger = new Logger(apiHost, apiKey, {metricNamePrefix: expectedPrefix})
+
+      expect(logger.metricNamePrefix).toBe(expectedPrefix)
 
 #    it 'should _initNavigationTimingPublishProcess when publishNavigationTimingMetrics is true and navigation timing api is available', ->
 #      # useful references:
