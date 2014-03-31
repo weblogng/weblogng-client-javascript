@@ -18,37 +18,87 @@ define ["logger"], (logger) ->
   Logger::_createWebSocket = (apiUrl) ->
     return new MockWS(apiUrl)
 
+  describe "Verify utility functions in WeblogNG client library exist", ->
+    it "generateUniqueId should be defined", ->
+      expect(generateUniqueId).toBeDefined()
+
+    it "epochTimeInMilliseconds should be defined", ->
+      expect(epochTimeInMilliseconds).toBeDefined()
+
+    it "locatePerformanceObject should be defined", ->
+      expect(locatePerformanceObject).toBeDefined()
+
+    it "hasNavigationTimingAPI should be defined", ->
+      expect(hasNavigationTimingAPI).toBeDefined()
+
   describe "Verify main classes in WeblogNG client library exist", ->
     it "Logger should be defined", ->
-      console.log "Logger: " + Logger
       expect(Logger).toBeDefined()
       return
 
     it "Timer should be defined", ->
-      console.log "Timer: " + Timer
       expect(Timer).toBeDefined()
 
     it "Socket should be defined", ->
-      console.log "Socket: " + Socket
       expect(Socket).toBeDefined()
 
   describe 'Logger', ->
     apiHost = "localhost:9000"
     apiKey = "abcd-1234"
     logger = null
+    window = null
 
     beforeEach () ->
       logger = new Logger(apiHost, apiKey)
+      window = {}
 
     it 'Logger be defined',  ->
       expect(Logger).toBeDefined()
 
-    it 'should set properties', ->
-      logger = new Logger(apiHost, apiKey)
+    it 'should set properties via constructor', ->
+      options = {}
+      logger = new Logger(apiHost, apiKey, options)
 
       expect(logger.id).toBeDefined()
       expect(logger.apiHost).toBe(apiHost)
       expect(logger.apiKey).toBe(apiKey)
+      expect(logger.options).toBe(options)
+
+    it 'should use default values for unspecified options', ->
+      logger = new Logger(apiHost, apiKey)
+
+      expect(logger.publishNavigationTimingMetrics).toBeTruthy()
+      expect(logger.metricNamePrefix).toBe("")
+
+    it 'should use publishNavigationTimingMetrics option when specified', ->
+      logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: true})
+
+      expect(logger.publishNavigationTimingMetrics).toBeTruthy()
+
+      logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: false})
+
+      expect(logger.publishNavigationTimingMetrics).toBeFalsy()
+
+    it 'should use metricNamePrefix option when specified', ->
+      expectedPrefix = "unit-test"
+      logger = new Logger(apiHost, apiKey, {metricNamePrefix: expectedPrefix})
+
+      expect(logger.metricNamePrefix).toBe(expectedPrefix)
+
+#    it 'should _initNavigationTimingPublishProcess when publishNavigationTimingMetrics is true and navigation timing api is available', ->
+#      # useful references:
+#      #   https://github.com/pivotal/jasmine/wiki/Spies
+#      #   http://stackoverflow.com/questions/9347631/spying-on-a-constructor-using-jasmine
+#      window.performance = {timing: 'available'}
+#
+#      spyOn(weblogng, 'Logger').andCallThrough()
+#
+#      options = {publishNavigationTimingMetrics: true}
+#      logger = new weblogng.Logger(apiHost, apiKey, options)
+#
+#      expect(weblogng.Logger).toHaveBeenCalledWith(apiHost, apiKey, options)
+#      expect(logger instanceof weblogng.Logger).toBeTruthy()
+#      expect(weblogng.Logger._initNavigationTimingPublishProcess).toHaveBeenCalled()
 
     it 'should print property data in toString', ->
       s = logger.toString()
@@ -67,6 +117,19 @@ define ["logger"], (logger) ->
       logger.sendMetric('metric_name', 34)
 
       expect(logger._createMetricMessage).toHaveBeenCalled()
+      expect(logger.webSocket.send).toHaveBeenCalled()
+
+    it 'sendMetric should prefix metric names with metricNamePrefix property', ->
+      prefix = "my-prefix-"
+      logger = new Logger(apiHost, apiKey, {metricNamePrefix: prefix})
+      spyOn(logger.webSocket, 'send')
+      spyOn(logger, '_createMetricMessage')
+
+      metricName = 'metric_name'
+      metricValue = 42
+      logger.sendMetric(metricName, metricValue)
+
+      expect(logger._createMetricMessage).toHaveBeenCalledWith(prefix + metricName, metricValue)
       expect(logger.webSocket.send).toHaveBeenCalled()
 
     it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
@@ -129,7 +192,7 @@ define ["logger"], (logger) ->
       expect(logger.sendMetric).toHaveBeenCalledWith(metric_name, timer.getElapsedTime())
       expect(logger.timers[metric_name]).toBeUndefined()
 
-    it '#time should execute provided method with timing instrumentation', ->
+    it 'executeWithTiming should execute provided method with timing instrumentation', ->
       executed = false
       my_awesome_function = ->
         executed = true
@@ -147,7 +210,7 @@ define ["logger"], (logger) ->
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
-    it '#time should not leak memory when provided method throws exception', ->
+    it 'executeWithTiming should not leak memory when provided method throws exception', ->
       executed = false
       my_terrible_function = ->
         executed = true
@@ -163,6 +226,98 @@ define ["logger"], (logger) ->
       expect(logger.timers[metric_name]).toBeUndefined()
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
+
+  describe 'Logger Navigation Timing API support', ->
+    logger = null
+    timing = null
+    apiHost = "localhost:9000"
+    apiKey = "abcd-1234"
+
+    beforeEach () ->
+      logger = new Logger(apiHost, apiKey)
+      window.performance = window.mozPerformance = window.msPerformance = window.webkitPerformance = undefined
+      timing = {}
+
+    it '_initNavigationTimingPublishProcess should return when Navigation Timing API is unavailable', ->
+      window.performance = undefined
+
+      expect(hasNavigationTimingAPI()).toBeFalsy()
+
+      spyOn(weblogng, 'toPageName')
+      spyOn(logger, 'sendMetric')
+
+      logger._initNavigationTimingPublishProcess()
+
+      expect(weblogng.toPageName).not.toHaveBeenCalled()
+      expect(logger.sendMetric).not.toHaveBeenCalled()
+
+    it '_initNavigationTimingPublishProcess should schedule a readyState check if Navigation Timing API is available', ->
+      timing = {}
+      window.performance = {vendor: 'standard', timing: timing}
+
+      expect(window.performance.timing).toBe(timing)
+
+      expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
+
+      spyOn(logger, '_waitForReadyStateComplete')
+
+      logger._initNavigationTimingPublishProcess()
+
+      expect(hasNavigationTimingAPI()).toBeTruthy()
+
+      expect(logger._waitForReadyStateComplete).toHaveBeenCalled()
+
+  describe 'Timing API helpers', ->
+
+    timing = null
+
+    beforeEach () ->
+      window.performance = window.mozPerformance = window.msPerformance = window.webkitPerformance = undefined
+      timing = {}
+
+    it 'locatePerformanceObject should return undefined when performance object is not present', ->
+
+      expect(locatePerformanceObject()).toBeUndefined()
+      expect(hasNavigationTimingAPI()).toBeFalsy()
+
+    it 'hasNavigationTimingAPI should return false when performance object is defined, but timing is not', ->
+      # note: not sure if performance would ever be defined without timing in real-life
+      performanceObject = {vendor: 'standard'}
+      window.performance = performanceObject
+
+      expect(locatePerformanceObject()).toBeDefined()
+      expect(hasNavigationTimingAPI()).toBeFalsy()
+
+    it 'locatePerformanceObject should find the performance object in its standard location', ->
+      performanceObject = {vendor: 'standard', timing: timing}
+      window.performance = performanceObject
+
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
+
+    it 'locatePerformanceObject should find the performance object in its mozilla-specific location', ->
+      performanceObject = {vendor: 'mozilla', timing: timing}
+      window.mozPerformance = performanceObject
+
+      expect(window.performance).toBeUndefined()
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
+
+    it 'locatePerformanceObject should find the performance object in its microsoft-specific location', ->
+      performanceObject = {vendor: 'microsoft', timing: timing}
+      window.msPerformance = performanceObject
+
+      expect(window.performance).toBeUndefined()
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
+
+    it 'locatePerformanceObject should find the performance object in its webkit-specific location', ->
+      performanceObject = {vendor: 'webkit', timing: timing}
+      window.webkitPerformance = performanceObject
+
+      expect(window.performance).toBeUndefined()
+      expect(locatePerformanceObject()).toBe(performanceObject)
+      expect(hasNavigationTimingAPI()).toBeTruthy()
 
   describe 'Socket', ->
     it 'Socket be defined', ->
@@ -189,7 +344,7 @@ define ["logger"], (logger) ->
       timer.finish()
 
       expect(timer.tStart).toBeUndefined()
-      expect(timer.tFinish).toBe(epochTimeInMilliseconds())
+      expect(timer.tFinish).toBeLessThan(epochTimeInMilliseconds() + 1)
 
     it 'should compute elapsed time based on start and finish times', ->
       timer.tStart = 42
@@ -213,4 +368,33 @@ define ["logger"], (logger) ->
 
       t_elapsed = new Date().getTime() - t_start
       expect(t_elapsed).toBeLessThan(1000)
+
+  describe 'toPageName', ->
+
+    location = null
+
+    beforeEach: () ->
+      location = {pathname: "/"}
+
+    it 'should be defined', ->
+      expect(toPageName).toBeDefined()
+
+    it 'should convert query paths to a WeblogNG compatible metric name component', ->
+
+      expect(toPageName({ pathname: "/" })).toBe("root")
+      expect(toPageName({ pathname: "////" })).toBe("root")
+
+      expect(toPageName({ pathname: "/some/page" })).toBe("some-page")
+      expect(toPageName({ pathname: "/some/page/" })).toBe("some-page")
+      expect(toPageName({ pathname: "//some///page////" })).toBe("some-page")
+      expect(toPageName({ pathname: "some/page/" })).toBe("some-page")
+      expect(toPageName({ pathname: "some/page" })).toBe("some-page")
+
+    it 'should convert bad location and location.pathname inputs to "unknown-page"', ->
+
+      expect(toPageName()).toBe("unknown-page")
+      expect(toPageName(null)).toBe("unknown-page")
+
+      expect(toPageName({pathname: undefined})).toBe("unknown-page")
+      expect(toPageName({pathname: null})).toBe("unknown-page")
 
