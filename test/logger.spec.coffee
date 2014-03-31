@@ -119,6 +119,19 @@ define ["logger"], (logger) ->
       expect(logger._createMetricMessage).toHaveBeenCalled()
       expect(logger.webSocket.send).toHaveBeenCalled()
 
+    it 'sendMetric should prefix metric names with metricNamePrefix property', ->
+      prefix = "my-prefix-"
+      logger = new Logger(apiHost, apiKey, {metricNamePrefix: prefix})
+      spyOn(logger.webSocket, 'send')
+      spyOn(logger, '_createMetricMessage')
+
+      metricName = 'metric_name'
+      metricValue = 42
+      logger.sendMetric(metricName, metricValue)
+
+      expect(logger._createMetricMessage).toHaveBeenCalledWith(prefix + metricName, metricValue)
+      expect(logger.webSocket.send).toHaveBeenCalled()
+
     it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
       metricName = "metric_name_" + Math.floor(Math.random() * 1000)
       metricValue = Math.random()

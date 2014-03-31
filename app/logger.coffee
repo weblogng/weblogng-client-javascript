@@ -107,7 +107,7 @@ class weblogng.Logger
 
 
   sendMetric: (metricName, metricValue) ->
-    metricMessage = @_createMetricMessage(metricName, metricValue)
+    metricMessage = @_createMetricMessage(@metricNamePrefix + metricName, metricValue)
     @webSocket.send(metricMessage)
 
   _createWebSocket: (apiUrl) ->
