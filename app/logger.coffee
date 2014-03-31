@@ -139,13 +139,44 @@ class weblogng.Logger
     if not hasNavigationTimingAPI()
       return
 
-    if "complete" == document.readyState
-      performance = locatePerformanceObject()
-      pageLoadTime = (performance.timing.loadEventStart - performance.timing.navigationStart)
-      @sendMetric(@_pageNameFactory() + "-page_load_time", pageLoadTime)
+    onReadyStateComplete = =>
+      @_publishNavigationTimingMetrics()
+
+    @_waitForReadyStateComplete(onReadyStateComplete, 5)
 
     return
 
+  _waitForReadyStateComplete: (callback, attemptsRemaining) ->
+    attemptsRemaining--
+
+    setTimeout ->
+      if "complete" == document.readyState
+        callback() if callback?
+        return
+      else
+        if attemptsRemaining > 0
+          console.log "WeblogNG: readyState was not complete, #{attemptsRemaining} re-scheduling"
+          @_waitForReadyStateComplete callback, attemptsRemaining
+        else
+          console.log "WeblogNG: readyState is not complete and no attempts remain; giving-up"
+    , 1000
+    return
+
+  _publishNavigationTimingMetrics: () ->
+    performance = locatePerformanceObject()
+    pageLoadTime = (performance.timing.loadEventStart - performance.timing.navigationStart)
+    @sendMetric(@_pageNameFactory() + "-page_load_time", pageLoadTime)
+
+    return
+
+  _scheduleReadyStateCheck: () ->
+
+    if "complete" == document.readyState
+      @_publishNavigationTimingMetrics()
+    else
+      setTimeout(@_scheduleReadyStateCheck, 1000)
+
+    return
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"
