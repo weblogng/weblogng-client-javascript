@@ -142,7 +142,7 @@ class weblogng.Logger
     onReadyStateComplete = =>
       @_publishNavigationTimingMetrics()
 
-    @_waitForReadyStateComplete(onReadyStateComplete, 5)
+    @_waitForReadyStateComplete(onReadyStateComplete, 10)
 
     return
 
