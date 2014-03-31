@@ -25,9 +25,6 @@ define ["logger"], (logger) ->
     it "epochTimeInMilliseconds should be defined", ->
       expect(epochTimeInMilliseconds).toBeDefined()
 
-    it "epochTimeInSeconds should be defined", ->
-      expect(epochTimeInSeconds).toBeDefined()
-
     it "locatePerformanceObject should be defined", ->
       expect(locatePerformanceObject).toBeDefined()
 
@@ -36,16 +33,13 @@ define ["logger"], (logger) ->
 
   describe "Verify main classes in WeblogNG client library exist", ->
     it "Logger should be defined", ->
-      console.log "Logger: " + Logger
       expect(Logger).toBeDefined()
       return
 
     it "Timer should be defined", ->
-      console.log "Timer: " + Timer
       expect(Timer).toBeDefined()
 
     it "Socket should be defined", ->
-      console.log "Socket: " + Socket
       expect(Socket).toBeDefined()
 
   describe 'Logger', ->
@@ -229,12 +223,12 @@ define ["logger"], (logger) ->
 
       expect(hasNavigationTimingAPI()).toBeFalsy()
 
-      spyOn(logger, '_pageNameFactory')
+      spyOn(weblogng, 'toPageName')
       spyOn(logger, 'sendMetric')
 
       logger._initNavigationTimingPublishProcess()
 
-      expect(logger._pageNameFactory).not.toHaveBeenCalled()
+      expect(weblogng.toPageName).not.toHaveBeenCalled()
       expect(logger.sendMetric).not.toHaveBeenCalled()
 
     it '_initNavigationTimingPublishProcess should schedule a readyState check if Navigation Timing API is available', ->
@@ -354,4 +348,33 @@ define ["logger"], (logger) ->
 
       t_elapsed = new Date().getTime() - t_start
       expect(t_elapsed).toBeLessThan(1000)
+
+  describe 'toPageName', ->
+
+    location = null
+
+    beforeEach: () ->
+      location = {pathname: "/"}
+
+    it 'should be defined', ->
+      expect(toPageName).toBeDefined()
+
+    it 'should convert query paths to a WeblogNG compatible metric name component', ->
+
+      expect(toPageName({ pathname: "/" })).toBe("root")
+      expect(toPageName({ pathname: "////" })).toBe("root")
+
+      expect(toPageName({ pathname: "/some/page" })).toBe("some-page")
+      expect(toPageName({ pathname: "/some/page/" })).toBe("some-page")
+      expect(toPageName({ pathname: "//some///page////" })).toBe("some-page")
+      expect(toPageName({ pathname: "some/page/" })).toBe("some-page")
+      expect(toPageName({ pathname: "some/page" })).toBe("some-page")
+
+    it 'should convert bad location and location.pathname inputs to "unknown-page"', ->
+
+      expect(toPageName()).toBe("unknown-page")
+      expect(toPageName(null)).toBe("unknown-page")
+
+      expect(toPageName({pathname: undefined})).toBe("unknown-page")
+      expect(toPageName({pathname: null})).toBe("unknown-page")
 

@@ -21,6 +21,22 @@ weblogng.hasNavigationTimingAPI = () ->
   else
     return false
 
+weblogng.patterns = {
+  MATCH_LEADING_AND_TRAILING_SLASHES: /^\/+|\/+$/g
+  , MATCH_SLASHES: /\/+/g
+}
+
+weblogng.toPageName = (location) ->
+  if location and location.pathname
+    pageName = location.pathname
+      .replace(patterns.MATCH_LEADING_AND_TRAILING_SLASHES, '')
+      .replace(patterns.MATCH_SLASHES, '-')
+    if "" == pageName
+      return "root"
+    else
+      return pageName
+  else
+    return "unknown-page"
 
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
@@ -131,9 +147,6 @@ class weblogng.Logger
 
     return
 
-  _pageNameFactory: () ->
-    return location.pathname
-
   _initNavigationTimingPublishProcess: () ->
 
     if not hasNavigationTimingAPI()
@@ -165,7 +178,7 @@ class weblogng.Logger
   _publishNavigationTimingMetrics: () ->
     performance = locatePerformanceObject()
     pageLoadTime = (performance.timing.loadEventStart - performance.timing.navigationStart)
-    @sendMetric(@_pageNameFactory() + "-page_load_time", pageLoadTime)
+    @sendMetric(toPageName(location) + "-page_load_time", pageLoadTime)
 
     return
 
