@@ -289,6 +289,8 @@ define ["logger"], (logger) ->
     it '_generateNavigationTimingMetrics should generate metrics using performance object', ->
       timing =
         navigationStart: 1000
+        dnsLookupStart: 1100
+        dnsLookupEnd: 1250
         connectStart: 1500
         responseStart: 1750
         loadEventStart: 2000
@@ -302,6 +304,7 @@ define ["logger"], (logger) ->
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
+      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBe(150)
       expect(navTimingMetrics[pageName + '-first_byte_time']).toBe(250)
       expect(navTimingMetrics[pageName + '-page_load_time']).toBe(1000)
 
@@ -309,6 +312,8 @@ define ["logger"], (logger) ->
       T_HAS_NOT_OCCURRED = 0
       timing =
         navigationStart: 1000
+        dnsLookupStart: 1100
+        dnsLookupEnd: T_HAS_NOT_OCCURRED
         connectStart: 1100
         responseStart: T_HAS_NOT_OCCURRED
         loadEventStart: T_HAS_NOT_OCCURRED
@@ -322,6 +327,7 @@ define ["logger"], (logger) ->
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
+      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBeUndefined()
       expect(navTimingMetrics[pageName + '-page_load_time']).toBeUndefined()
       expect(navTimingMetrics[pageName + '-first_byte_time']).toBeUndefined()
 

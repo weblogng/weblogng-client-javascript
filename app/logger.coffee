@@ -195,6 +195,9 @@ class weblogng.Logger
 
     metrics = {}
 
+    if performance.timing.dnsLookupStart > 0 and performance.timing.dnsLookupEnd > 0
+      metrics[(baseMetricName + "-dns_lookup_time")] = (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart)
+
     if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
       metrics[(baseMetricName + "-first_byte_time")] = (performance.timing.responseStart - performance.timing.connectStart)
 
