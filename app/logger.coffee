@@ -170,7 +170,7 @@ class weblogng.Logger
   _waitForReadyStateComplete: (callback, attemptsRemaining) ->
     attemptsRemaining--
 
-    setTimeout ->
+    setTimeout =>
       if "complete" == document.readyState
         callback() if callback?
         return
@@ -184,11 +184,30 @@ class weblogng.Logger
     return
 
   _publishNavigationTimingMetrics: () ->
-    performance = locatePerformanceObject()
-    pageLoadTime = (performance.timing.loadEventStart - performance.timing.navigationStart)
-    @sendMetric(toPageName(location) + "-page_load_time", pageLoadTime)
+    for name, value of @_generateNavigationTimingMetrics()
+      @sendMetric("#{name}", value)
 
     return
+
+  _generateNavigationTimingMetrics: () ->
+    performance = locatePerformanceObject()
+    baseMetricName = toPageName(location)
+
+    metrics = {}
+
+    if performance.timing.dnsLookupStart > 0 and performance.timing.dnsLookupEnd > 0
+      metrics[(baseMetricName + "-dns_lookup_time")] = (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart)
+
+    if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
+      metrics[(baseMetricName + "-first_byte_time")] = (performance.timing.responseStart - performance.timing.connectStart)
+
+    if performance.timing.responseStart > 0 and performance.timing.responseEnd > 0
+      metrics[(baseMetricName + "-response_recv_time")] = (performance.timing.responseEnd - performance.timing.responseStart)
+
+    if performance.timing.loadEventStart > 0
+      metrics[(baseMetricName + "-page_load_time")] = (performance.timing.loadEventStart - performance.timing.navigationStart)
+
+    return metrics
 
   _scheduleReadyStateCheck: () ->
 

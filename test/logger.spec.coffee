@@ -267,6 +267,75 @@ define ["logger"], (logger) ->
 
       expect(logger._waitForReadyStateComplete).toHaveBeenCalled()
 
+    it '_publishNavigationTimingMetrics should generate nav timing metrics and then send metrics to server', ->
+      timing = {}
+      window.performance = {vendor: 'standard', timing: timing}
+
+      expect(window.performance.timing).toBe(timing)
+
+      expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
+
+      mockNavTimingMetrics = {metricName: 42}
+      spyOn(logger, '_generateNavigationTimingMetrics').andReturn(mockNavTimingMetrics)
+      spyOn(logger, 'sendMetric')
+
+      logger._publishNavigationTimingMetrics()
+
+      expect(hasNavigationTimingAPI()).toBeTruthy()
+
+      expect(logger._generateNavigationTimingMetrics).toHaveBeenCalled()
+      expect(logger.sendMetric).toHaveBeenCalledWith("metricName", mockNavTimingMetrics.metricName)
+
+    it '_generateNavigationTimingMetrics should generate metrics using performance object', ->
+      timing =
+        navigationStart: 1000
+        dnsLookupStart: 1100
+        dnsLookupEnd: 1250
+        connectStart: 1500
+        responseStart: 1750
+        responseEnd: 1950
+        loadEventStart: 2000
+
+      window.performance = {vendor: 'standard', timing: timing}
+
+      pageName = 'some'
+      spyOn(weblogng, 'toPageName').andReturn(pageName);
+
+      navTimingMetrics = logger._generateNavigationTimingMetrics()
+
+      expect(weblogng.toPageName).toHaveBeenCalledWith(location)
+
+      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBe(150)
+      expect(navTimingMetrics[pageName + '-first_byte_time']).toBe(250)
+      expect(navTimingMetrics[pageName + '-response_recv_time']).toBe(200)
+      expect(navTimingMetrics[pageName + '-page_load_time']).toBe(1000)
+
+    it '_generateNavigationTimingMetrics should only generate metrics for events that have occurred', ->
+      T_HAS_NOT_OCCURRED = 0
+      timing =
+        navigationStart: 1000
+        dnsLookupStart: 1100
+        dnsLookupEnd: T_HAS_NOT_OCCURRED
+        connectStart: 1100
+        responseStart: T_HAS_NOT_OCCURRED
+        responseEnd: T_HAS_NOT_OCCURRED
+        loadEventStart: T_HAS_NOT_OCCURRED
+
+      window.performance = {vendor: 'standard', timing: timing}
+
+      pageName = 'some'
+      spyOn(weblogng, 'toPageName').andReturn(pageName);
+
+      navTimingMetrics = logger._generateNavigationTimingMetrics()
+
+      expect(weblogng.toPageName).toHaveBeenCalledWith(location)
+
+      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBeUndefined()
+      expect(navTimingMetrics[pageName + '-page_load_time']).toBeUndefined()
+      expect(navTimingMetrics[pageName + '-response_recv_time']).toBeUndefined()
+      expect(navTimingMetrics[pageName + '-first_byte_time']).toBeUndefined()
+
+
   describe 'Timing API helpers', ->
 
     timing = null
