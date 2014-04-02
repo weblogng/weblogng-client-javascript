@@ -49,7 +49,7 @@ class weblogng.Socket
   _waitForSocketConnection: (socket, callback, attemptsRemaining) ->
     attemptsRemaining--
 
-    setTimeout ->
+    setTimeout =>
       if socket.readyState is 1
         callback() if callback?
         return
