@@ -184,11 +184,19 @@ class weblogng.Logger
     return
 
   _publishNavigationTimingMetrics: () ->
-    performance = locatePerformanceObject()
-    pageLoadTime = (performance.timing.loadEventStart - performance.timing.navigationStart)
-    @sendMetric(toPageName(location) + "-page_load_time", pageLoadTime)
+    for name, value of @_generateNavigationTimingMetrics()
+      @sendMetric("#{name}", value)
 
     return
+
+  _generateNavigationTimingMetrics: () ->
+    performance = locatePerformanceObject()
+    baseMetricName = toPageName(location)
+
+    metrics = {}
+    metrics[(baseMetricName + "-page_load_time")] = (performance.timing.loadEventStart - performance.timing.navigationStart)
+
+    return metrics
 
   _scheduleReadyStateCheck: () ->
 

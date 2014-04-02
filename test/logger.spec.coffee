@@ -267,6 +267,39 @@ define ["logger"], (logger) ->
 
       expect(logger._waitForReadyStateComplete).toHaveBeenCalled()
 
+    it '_publishNavigationTimingMetrics should generate nav timing metrics and then send metrics to server', ->
+      timing = {}
+      window.performance = {vendor: 'standard', timing: timing}
+
+      expect(window.performance.timing).toBe(timing)
+
+      expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
+
+      mockNavTimingMetrics = {metricName: 42}
+      spyOn(logger, '_generateNavigationTimingMetrics').andReturn(mockNavTimingMetrics)
+      spyOn(logger, 'sendMetric')
+
+      logger._publishNavigationTimingMetrics()
+
+      expect(hasNavigationTimingAPI()).toBeTruthy()
+
+      expect(logger._generateNavigationTimingMetrics).toHaveBeenCalled()
+      expect(logger.sendMetric).toHaveBeenCalledWith("metricName", mockNavTimingMetrics.metricName)
+
+    it '_generateNavigationTimingMetrics should generate metrics using performance object', ->
+      timing = navigationStart: 1000, loadEventStart: 2000
+      window.performance = {vendor: 'standard', timing: timing}
+
+      pageName = 'some'
+      spyOn(weblogng, 'toPageName').andReturn(pageName);
+
+      navTimingMetrics = logger._generateNavigationTimingMetrics()
+
+      expect(weblogng.toPageName).toHaveBeenCalledWith(location)
+
+      expect(navTimingMetrics[pageName + '-page_load_time']).toBe(1000)
+
+
   describe 'Timing API helpers', ->
 
     timing = null
