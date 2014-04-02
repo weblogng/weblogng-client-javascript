@@ -194,7 +194,12 @@ class weblogng.Logger
     baseMetricName = toPageName(location)
 
     metrics = {}
-    metrics[(baseMetricName + "-page_load_time")] = (performance.timing.loadEventStart - performance.timing.navigationStart)
+
+    if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
+      metrics[(baseMetricName + "-first_byte_time")] = (performance.timing.responseStart - performance.timing.connectStart)
+
+    if performance.timing.loadEventStart > 0
+      metrics[(baseMetricName + "-page_load_time")] = (performance.timing.loadEventStart - performance.timing.navigationStart)
 
     return metrics
 
