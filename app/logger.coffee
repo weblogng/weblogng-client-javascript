@@ -201,6 +201,9 @@ class weblogng.Logger
     if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
       metrics[(baseMetricName + "-first_byte_time")] = (performance.timing.responseStart - performance.timing.connectStart)
 
+    if performance.timing.responseStart > 0 and performance.timing.responseEnd > 0
+      metrics[(baseMetricName + "-response_recv_time")] = (performance.timing.responseEnd - performance.timing.responseStart)
+
     if performance.timing.loadEventStart > 0
       metrics[(baseMetricName + "-page_load_time")] = (performance.timing.loadEventStart - performance.timing.navigationStart)
 
