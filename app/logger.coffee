@@ -170,7 +170,7 @@ class weblogng.Logger
   _waitForReadyStateComplete: (callback, attemptsRemaining) ->
     attemptsRemaining--
 
-    setTimeout ->
+    setTimeout =>
       if "complete" == document.readyState
         callback() if callback?
         return
