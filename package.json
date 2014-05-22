@@ -1,7 +1,7 @@
 {
   "name": "weblogng-logger",
   "description": "WeblogNG Client Library",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "engines": {
     "node": ">= 0.8.0"
   },
@@ -11,7 +11,7 @@
   "author": {
     "name": "Stephen Kuenzli",
     "email": "skuenzli@qualimente.com",
-    "url": "http://weblog-ng-ui.herokuapp.com"
+    "url": "http://www.weblogng.com"
   },
   "licenses": [
     {
@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type" : "git"
-    , "url" : "git@bitbucket.org:beardedrobotllc/weblog-ng-client-javascript.git"
+    , "url" : "git@github.com:weblogng/weblogng-client-javascript.git"
   },
   "devDependencies": {
     "grunt-contrib-coffee": "~0.7.0",
