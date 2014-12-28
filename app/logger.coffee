@@ -91,7 +91,7 @@ class weblogng.Logger
     , metricNamePrefix: ""
   }) ->
     @id = generateUniqueId()
-    @apiUrl = "wss://#{apiHost}/log/ws"
+    @apiUrl = "https://#{apiHost}/v2/log"
     @webSocket = @_createWebSocket(@apiUrl)
     @timers = {}
 

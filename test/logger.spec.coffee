@@ -107,8 +107,8 @@ define ["logger"], (logger) ->
       expect(s).toContain(logger.apiHost)
       expect(s).toContain(logger.apiKey)
 
-    it 'should build secure WebSocket urls', ->
-      expect(logger.apiUrl).toBe("wss://#{apiHost}/log/ws")
+    it 'should build secure loggin api urls', ->
+      expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
     it 'should send metrics via the websocket', ->
       spyOn(logger.webSocket, 'send')
