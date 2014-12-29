@@ -133,28 +133,32 @@ define ["logger"], (logger) ->
       expect(logger.webSocket.send).toHaveBeenCalled()
 
     it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
-      metricName = "metric_name_" + Math.floor(Math.random() * 1000)
-      metricValue = Math.random()
-      timestamp = epochTimeInSeconds()
+      for num in [1..100]
+        metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
+        console.log(metricName)
+        metricValue = Math.random()
+        timestamp = epochTimeInSeconds()
+        truncatedTimestamp = Math.floor(timestamp / 10)
 
-      message = logger._createMetricMessage(metricName, metricValue)
+        message = logger._createMetricMessage(metricName, metricValue)
 
-      truncatedTimestamp = Math.floor(timestamp / 10)
+        actualTimestamp = message.metrics[0].timestamp
+        actualTruncatedTimestamp = Math.floor(actualTimestamp / 10)
+        expect(actualTruncatedTimestamp).toBe(truncatedTimestamp)
 
-      expectedLogMessage =
-        "apiAccessKey": apiKey,
-        "context": {},
-        "metrics": [
-          {
-            "name": metricName,
-            "value": metricValue,
-            "unit": "ms",
-            "timestamp": timestamp
-          }
-        ]
+        expectedLogMessage =
+          "apiAccessKey": apiKey,
+          "context": {},
+          "metrics": [
+            {
+              "name": metricName,
+              "value": metricValue,
+              "unit": "ms",
+              "timestamp": actualTimestamp
+            }
+          ]
 
-      #expect(message).toContain("v1.metric #{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
-      expect(message).toEqual(expectedLogMessage)
+        expect(message).toEqual(expectedLogMessage)
 
     it 'should create a metric message using provided name and value time, when provided', ->
       metricName = "metric_name"
@@ -430,10 +434,14 @@ define ["logger"], (logger) ->
       expect(timer.tFinish).toBeUndefined()
 
     it 'should record current time when start is called', ->
-      timer.start()
+      for i in [1..100]
+        before = epochTimeInMilliseconds()
+        timer.start()
+        after = epochTimeInMilliseconds()
 
-      expect(timer.tStart).toBe(epochTimeInMilliseconds())
-      expect(timer.tFinish).toBeUndefined()
+        expect(timer.tStart).toBeGreaterThan(before - 1)
+        expect(timer.tStart).toBeLessThan(after + 1)
+        expect(timer.tFinish).toBeUndefined()
 
     it 'should record current time when finish is called', ->
       timer.finish()
