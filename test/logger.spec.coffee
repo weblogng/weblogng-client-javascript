@@ -140,16 +140,42 @@ define ["logger"], (logger) ->
       message = logger._createMetricMessage(metricName, metricValue)
 
       truncatedTimestamp = Math.floor(timestamp / 10)
-      expect(message).toContain("v1.metric #{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
+
+      expectedLogMessage =
+        "apiAccessKey": apiKey,
+        "context": {},
+        "metrics": [
+          {
+            "name": metricName,
+            "value": metricValue,
+            "unit": "ms",
+            "timestamp": timestamp
+          }
+        ]
+
+      #expect(message).toContain("v1.metric #{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
+      expect(message).toEqual(expectedLogMessage)
 
     it 'should create a metric message using provided name and value time, when provided', ->
       metricName = "metric_name"
       metricValue = 42
       timestamp = 1362714242
 
+      expectedLogMessage =
+        "apiAccessKey": apiKey,
+        "context": {},
+        "metrics": [
+          {
+            "name": metricName,
+            "value": metricValue,
+            "unit": "ms",
+            "timestamp": timestamp
+          }
+        ]
+
       message = logger._createMetricMessage(metricName, metricValue, timestamp)
 
-      expect(message).toBe("v1.metric #{apiKey} #{metricName} #{metricValue} #{timestamp}")
+      expect(message).toEqual(expectedLogMessage)
 
     it 'should sanitize metric names', ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']

@@ -99,7 +99,19 @@ class weblogng.Logger
 
   _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInSeconds()) ->
     sanitizedMetricName = @_sanitizeMetricName(metricName)
-    return "v1.metric #{@apiKey} #{sanitizedMetricName} #{metricValue} #{timestamp}"
+    message =
+      "apiAccessKey": @apiKey,
+      "context": {},
+      "metrics": [
+        {
+          "name": sanitizedMetricName,
+          "value": metricValue,
+          "unit": "ms",
+          "timestamp": timestamp
+        }
+      ]
+
+    return message
 
   _sanitizeMetricName: (metricName) ->
     metricName.replace /[^\w\d_-]/g, '_'
