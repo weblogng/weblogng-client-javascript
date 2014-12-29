@@ -39,8 +39,8 @@ define ["logger"], (logger) ->
     it "Timer should be defined", ->
       expect(Timer).toBeDefined()
 
-    it "Socket should be defined", ->
-      expect(Socket).toBeDefined()
+    it "APIConnection should be defined", ->
+      expect(APIConnection).toBeDefined()
 
   describe 'Logger', ->
     apiHost = "localhost:9000"
@@ -107,10 +107,10 @@ define ["logger"], (logger) ->
       expect(s).toContain(logger.apiHost)
       expect(s).toContain(logger.apiKey)
 
-    it 'should build secure WebSocket urls', ->
-      expect(logger.apiUrl).toBe("wss://#{apiHost}/log/ws")
+    it 'should build secure loggin api urls', ->
+      expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
-    it 'should send metrics via the websocket', ->
+    it 'should send metrics via the apiConnection', ->
       spyOn(logger.webSocket, 'send')
       spyOn(logger, '_createMetricMessage')
 
@@ -133,23 +133,53 @@ define ["logger"], (logger) ->
       expect(logger.webSocket.send).toHaveBeenCalled()
 
     it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
-      metricName = "metric_name_" + Math.floor(Math.random() * 1000)
-      metricValue = Math.random()
-      timestamp = epochTimeInSeconds()
+      for num in [1..100]
+        metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
+        console.log(metricName)
+        metricValue = Math.random()
+        timestamp = epochTimeInSeconds()
+        truncatedTimestamp = Math.floor(timestamp / 10)
 
-      message = logger._createMetricMessage(metricName, metricValue)
+        message = logger._createMetricMessage(metricName, metricValue)
 
-      truncatedTimestamp = Math.floor(timestamp / 10)
-      expect(message).toContain("v1.metric #{apiKey} #{metricName} #{metricValue} #{truncatedTimestamp}")
+        actualTimestamp = message.metrics[0].timestamp
+        actualTruncatedTimestamp = Math.floor(actualTimestamp / 10)
+        expect(actualTruncatedTimestamp).toBe(truncatedTimestamp)
+
+        expectedLogMessage =
+          "apiAccessKey": apiKey,
+          "context": {},
+          "metrics": [
+            {
+              "name": metricName,
+              "value": metricValue,
+              "unit": "ms",
+              "timestamp": actualTimestamp
+            }
+          ]
+
+        expect(message).toEqual(expectedLogMessage)
 
     it 'should create a metric message using provided name and value time, when provided', ->
       metricName = "metric_name"
       metricValue = 42
       timestamp = 1362714242
 
+      expectedLogMessage =
+        "apiAccessKey": apiKey,
+        "context": {},
+        "metrics": [
+          {
+            "name": metricName,
+            "value": metricValue,
+            "unit": "ms",
+            "timestamp": timestamp
+          }
+        ]
+
       message = logger._createMetricMessage(metricName, metricValue, timestamp)
 
-      expect(message).toBe("v1.metric #{apiKey} #{metricName} #{metricValue} #{timestamp}")
+      expect(message).toEqual(expectedLogMessage)
 
     it 'should sanitize metric names', ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
@@ -388,9 +418,9 @@ define ["logger"], (logger) ->
       expect(locatePerformanceObject()).toBe(performanceObject)
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
-  describe 'Socket', ->
-    it 'Socket be defined', ->
-      expect(Socket).toBeDefined()
+  describe 'APIConnection', ->
+    it 'APIConnection be defined', ->
+      expect(APIConnection).toBeDefined()
 
   describe 'Timer', ->
     timer = null
@@ -404,10 +434,14 @@ define ["logger"], (logger) ->
       expect(timer.tFinish).toBeUndefined()
 
     it 'should record current time when start is called', ->
-      timer.start()
+      for i in [1..100]
+        before = epochTimeInMilliseconds()
+        timer.start()
+        after = epochTimeInMilliseconds()
 
-      expect(timer.tStart).toBe(epochTimeInMilliseconds())
-      expect(timer.tFinish).toBeUndefined()
+        expect(timer.tStart).toBeGreaterThan(before - 1)
+        expect(timer.tStart).toBeLessThan(after + 1)
+        expect(timer.tFinish).toBeUndefined()
 
     it 'should record current time when finish is called', ->
       timer.finish()

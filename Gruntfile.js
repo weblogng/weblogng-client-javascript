@@ -127,12 +127,12 @@ module.exports = function (grunt) {
         tasks: ['jshint:gruntfile']
       },
       src: {
-        files: ['app/**/*.js'],
-        tasks: ['jshint:src', 'jasmine']
+        files: ['app/**/*.coffee'],
+        tasks: ['default']
       },
       test: {
-        files: ['test/**/*.js'],
-        tasks: ['jshint:test', 'jasmine']
+        files: ['test/**/*.coffee'],
+        tasks: ['default']
       }
     },
     bower: {
