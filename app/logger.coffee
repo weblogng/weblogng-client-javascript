@@ -41,35 +41,19 @@ weblogng.toPageName = (location) ->
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
 ###
-class weblogng.Socket
+class weblogng.APIConnection
   constructor: (apiUrl) ->
-    WS = if window['MozWebSocket'] then MozWebSocket else window['WebSocket']
-    @socket = new WS(apiUrl)
+    @apiUrl = apiUrl
 
-  _waitForSocketConnection: (socket, callback, attemptsRemaining) ->
-    attemptsRemaining--
+  send: (logMessage) ->
+    xhr = new XMLHttpRequest()
+    xhr.open("POST", @apiUrl, true)
+    xhr.setRequestHeader("Content-Type", "application/json")
+    xhr.setRequestHeader("Accept", "application/json, text/javascript, */*; q=0.01")
+    xhr.send(JSON.stringify(logMessage))
 
-    setTimeout =>
-      if socket.readyState is 1
-        callback() if callback?
-        return
-      else
-        if attemptsRemaining > 0
-          console.log "WeblogNG: websocket was not ready, #{attemptsRemaining} re-scheduling"
-          @_waitForSocketConnection socket, callback, attemptsRemaining
-        else
-          console.log "WeblogNG: websocket was not ready and no attempts remain; giving-up"
-    , 1000
     return
 
-  send: (message) ->
-    socket = @socket
-
-    onSuccessfulConnection = ->
-      socket.send(message)
-
-    @_waitForSocketConnection(@socket, onSuccessfulConnection, 5)
-    return
 
 class weblogng.Timer
   constructor: () ->
@@ -111,7 +95,7 @@ class weblogng.Logger
     @webSocket.send(metricMessage)
 
   _createWebSocket: (apiUrl) ->
-    return new weblogng.Socket(apiUrl)
+    return new weblogng.APIConnection(apiUrl)
 
   _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInSeconds()) ->
     sanitizedMetricName = @_sanitizeMetricName(metricName)

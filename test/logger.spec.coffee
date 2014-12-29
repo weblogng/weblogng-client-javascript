@@ -39,8 +39,8 @@ define ["logger"], (logger) ->
     it "Timer should be defined", ->
       expect(Timer).toBeDefined()
 
-    it "Socket should be defined", ->
-      expect(Socket).toBeDefined()
+    it "APIConnection should be defined", ->
+      expect(APIConnection).toBeDefined()
 
   describe 'Logger', ->
     apiHost = "localhost:9000"
@@ -110,7 +110,7 @@ define ["logger"], (logger) ->
     it 'should build secure loggin api urls', ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
-    it 'should send metrics via the websocket', ->
+    it 'should send metrics via the apiConnection', ->
       spyOn(logger.webSocket, 'send')
       spyOn(logger, '_createMetricMessage')
 
@@ -388,9 +388,9 @@ define ["logger"], (logger) ->
       expect(locatePerformanceObject()).toBe(performanceObject)
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
-  describe 'Socket', ->
-    it 'Socket be defined', ->
-      expect(Socket).toBeDefined()
+  describe 'APIConnection', ->
+    it 'APIConnection be defined', ->
+      expect(APIConnection).toBeDefined()
 
   describe 'Timer', ->
     timer = null
