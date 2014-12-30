@@ -97,7 +97,7 @@ class weblogng.Logger
   _createWebSocket: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)
 
-  _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInSeconds()) ->
+  _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
     sanitizedMetricName = @_sanitizeMetricName(metricName)
     message =
       "apiAccessKey": @apiKey,

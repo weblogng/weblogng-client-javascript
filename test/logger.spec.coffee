@@ -137,7 +137,7 @@ define ["logger"], (logger) ->
         metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
         console.log(metricName)
         metricValue = Math.random()
-        timestamp = epochTimeInSeconds()
+        timestamp = epochTimeInMilliseconds()
         truncatedTimestamp = Math.floor(timestamp / 10)
 
         message = logger._createMetricMessage(metricName, metricValue)
@@ -163,7 +163,7 @@ define ["logger"], (logger) ->
     it 'should create a metric message using provided name and value time, when provided', ->
       metricName = "metric_name"
       metricValue = 42
-      timestamp = 1362714242
+      timestamp = 1362714242000
 
       expectedLogMessage =
         "apiAccessKey": apiKey,
