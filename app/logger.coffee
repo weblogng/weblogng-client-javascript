@@ -157,7 +157,7 @@ class weblogng.Logger
       return
 
     onReadyStateComplete = =>
-      @_publishNavigationTimingMetrics()
+      @_publishNavigationTimingData()
 
     @_waitForReadyStateComplete(onReadyStateComplete, 10)
 
@@ -179,7 +179,7 @@ class weblogng.Logger
     , 1000
     return
 
-  _publishNavigationTimingMetrics: () ->
+  _publishNavigationTimingData: () ->
     for name, value of @_generateNavigationTimingMetrics()
       @sendMetric("#{name}", value)
 
@@ -208,7 +208,7 @@ class weblogng.Logger
   _scheduleReadyStateCheck: () ->
 
     if "complete" == document.readyState
-      @_publishNavigationTimingMetrics()
+      @_publishNavigationTimingData()
     else
       setTimeout(@_scheduleReadyStateCheck, 1000)
 

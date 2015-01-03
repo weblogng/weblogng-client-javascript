@@ -297,7 +297,7 @@ define ["logger"], (logger) ->
 
       expect(logger._waitForReadyStateComplete).toHaveBeenCalled()
 
-    it '_publishNavigationTimingMetrics should generate nav timing metrics and then send metrics to server', ->
+    it '_publishNavigationTimingData should generate nav timing metrics and then send metrics to server', ->
       timing = {}
       window.performance = {vendor: 'standard', timing: timing}
 
@@ -309,7 +309,7 @@ define ["logger"], (logger) ->
       spyOn(logger, '_generateNavigationTimingMetrics').andReturn(mockNavTimingMetrics)
       spyOn(logger, 'sendMetric')
 
-      logger._publishNavigationTimingMetrics()
+      logger._publishNavigationTimingData()
 
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
