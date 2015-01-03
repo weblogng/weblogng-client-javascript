@@ -113,6 +113,21 @@ class weblogng.Logger
 
     return message
 
+  _createLogMessage: (events = [], metrics = []) ->
+    for event in events
+      event.name = @_sanitizeMetricName(event.name)
+
+    for metric in metrics
+      metric.name = @_sanitizeMetricName(metric.name)
+
+    message =
+      "apiAccessKey": @apiKey,
+      "context": {},
+      "events": events
+      "metrics": metrics
+
+    return message
+
   _sanitizeMetricName: (metricName) ->
     metricName.replace /[^\w\d_-]/g, '_'
 

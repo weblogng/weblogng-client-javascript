@@ -18,6 +18,29 @@ define ["logger"], (logger) ->
   Logger::_createWebSocket = (apiUrl) ->
     return new MockWS(apiUrl)
 
+  makeMetric = () ->
+    metric = {}
+    metric.name = "metric_name_" + Math.floor(Math.random() * 25)
+    metric.value = Math.random() * 100
+    metric.unit = "ms"
+    metric.timestamp = epochTimeInMilliseconds()
+
+    return metric
+
+  makeMetrics = (numMetrics) ->
+    (makeMetric() for num in [1..numMetrics])
+
+  makeEvent = () ->
+    event = {}
+    event.name = "event_name_" + Math.floor(Math.random() * 25)
+    event.scope = "application"
+    event.timestamp = epochTimeInMilliseconds()
+
+    return event
+
+  makeEvents = (numEvents) ->
+    (makeEvent() for num in [1..numEvents])
+
   describe "Verify utility functions in WeblogNG client library exist", ->
     it "generateUniqueId should be defined", ->
       expect(generateUniqueId).toBeDefined()
@@ -135,7 +158,6 @@ define ["logger"], (logger) ->
     it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
       for num in [1..100]
         metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
-        console.log(metricName)
         metricValue = Math.random()
         timestamp = epochTimeInMilliseconds()
         truncatedTimestamp = Math.floor(timestamp / 10)
@@ -180,6 +202,27 @@ define ["logger"], (logger) ->
       message = logger._createMetricMessage(metricName, metricValue, timestamp)
 
       expect(message).toEqual(expectedLogMessage)
+
+    it 'should create a log message using provided events and metrics', ->
+
+      for num in [1..10]
+        numMetrics = Math.floor((Math.random() * 10) + 1)
+        metrics = makeMetrics(numMetrics)
+
+        numEvents = Math.floor((Math.random() * 10) + 1)
+        events = makeEvents(numEvents)
+
+        message = logger._createLogMessage(events, metrics)
+
+        expectedLogMessage =
+          "apiAccessKey": apiKey,
+          "context": {},
+          "events": events,
+          "metrics": metrics
+
+        expect(events.length).toBe(numEvents)
+        expect(metrics.length).toBe(numMetrics)
+        expect(message).toEqual(expectedLogMessage)
 
     it 'should sanitize metric names', ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
