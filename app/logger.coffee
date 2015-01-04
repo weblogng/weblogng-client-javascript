@@ -209,8 +209,8 @@ class weblogng.Logger
     return
 
   _publishNavigationTimingData: () ->
-    metrics = @_generateNavigationTimingData()
-    logMessage = @_createLogMessage(events = [], metrics = metrics)
+    timingData = @_generateNavigationTimingData()
+    logMessage = @_createLogMessage(timingData.events, timingData.metrics)
     @webSocket.send(logMessage)
 
     return

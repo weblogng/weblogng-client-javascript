@@ -349,6 +349,9 @@ define ["logger"], (logger) ->
       expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
 
       mockData =
+        events: [
+          logger.makeEvent("app-page_load")
+        ]
         metrics: [
           logger.makeMetric("metricName", 42)
         ]
@@ -361,8 +364,7 @@ define ["logger"], (logger) ->
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
       expect(logger._generateNavigationTimingData).toHaveBeenCalled()
-      events = []
-      expect(logger.webSocket.send).toHaveBeenCalledWith(logger._createLogMessage(events, mockData))
+      expect(logger.webSocket.send).toHaveBeenCalledWith(logger._createLogMessage(mockData.events, mockData.metrics))
 
     it '_generateNavigationTimingData should generate metrics using performance object', ->
       timing =
