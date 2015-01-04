@@ -209,17 +209,18 @@ class weblogng.Logger
     return
 
   _publishNavigationTimingData: () ->
-    metrics = @_generateNavigationTimingMetrics()
+    metrics = @_generateNavigationTimingData()
     logMessage = @_createLogMessage(events = [], metrics = metrics)
     @webSocket.send(logMessage)
 
     return
 
-  _generateNavigationTimingMetrics: () ->
+  _generateNavigationTimingData: () ->
     performance = locatePerformanceObject()
     baseMetricName = toPageName(location)
     timestamp = epochTimeInMilliseconds()
 
+    events = []
     metrics = []
 
     if performance.timing.dnsLookupStart > 0 and performance.timing.dnsLookupEnd > 0
@@ -245,8 +246,13 @@ class weblogng.Logger
         (performance.timing.loadEventStart - performance.timing.navigationStart),
         timestamp)
       metrics.push(metric)
+      events.push(@makeEvent(baseMetricName + "-page_load"))
 
-    return metrics
+    data =
+      metrics: metrics
+      events: events
+
+    return data
 
   _scheduleReadyStateCheck: () ->
 

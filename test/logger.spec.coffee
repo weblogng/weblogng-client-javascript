@@ -348,19 +348,23 @@ define ["logger"], (logger) ->
 
       expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
 
-      mockMetrics = [logger.makeMetric("metricName", 42)]
-      spyOn(logger, '_generateNavigationTimingMetrics').andReturn(mockMetrics)
+      mockData =
+        metrics: [
+          logger.makeMetric("metricName", 42)
+        ]
+
+      spyOn(logger, '_generateNavigationTimingData').andReturn(mockData)
       spyOn(logger.webSocket, 'send')
 
       logger._publishNavigationTimingData()
 
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
-      expect(logger._generateNavigationTimingMetrics).toHaveBeenCalled()
+      expect(logger._generateNavigationTimingData).toHaveBeenCalled()
       events = []
-      expect(logger.webSocket.send).toHaveBeenCalledWith(logger._createLogMessage(events, mockMetrics))
+      expect(logger.webSocket.send).toHaveBeenCalledWith(logger._createLogMessage(events, mockData))
 
-    it '_generateNavigationTimingMetrics should generate metrics using performance object', ->
+    it '_generateNavigationTimingData should generate metrics using performance object', ->
       timing =
         navigationStart: 1000
         dnsLookupStart: 1100
@@ -375,18 +379,26 @@ define ["logger"], (logger) ->
       pageName = 'some'
       spyOn(weblogng, 'toPageName').andReturn(pageName);
 
-      navTimingMetrics = logger._generateNavigationTimingMetrics()
+      navTimingData = logger._generateNavigationTimingData()
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
-      actualTimestamp = navTimingMetrics[0].timestamp
+      expect(navTimingData.events).not.toBeNull()
+      expect(navTimingData.metrics).not.toBeNull()
 
-      expect(navTimingMetrics[0]).toEqual(logger.makeMetric(pageName + '-dns_lookup_time', 150, actualTimestamp))
-      expect(navTimingMetrics[1]).toEqual(logger.makeMetric(pageName + '-first_byte_time', 250, actualTimestamp))
-      expect(navTimingMetrics[2]).toEqual(logger.makeMetric(pageName + '-response_recv_time', 200, actualTimestamp))
-      expect(navTimingMetrics[3]).toEqual(logger.makeMetric(pageName + '-page_load_time', 1000, actualTimestamp))
+      metrics = navTimingData.metrics
 
-    it '_generateNavigationTimingMetrics should only generate metrics for events that have occurred', ->
+      actualTimestamp = metrics[0].timestamp
+
+      expect(metrics[0]).toEqual(logger.makeMetric(pageName + '-dns_lookup_time', 150, actualTimestamp))
+      expect(metrics[1]).toEqual(logger.makeMetric(pageName + '-first_byte_time', 250, actualTimestamp))
+      expect(metrics[2]).toEqual(logger.makeMetric(pageName + '-response_recv_time', 200, actualTimestamp))
+      expect(metrics[3]).toEqual(logger.makeMetric(pageName + '-page_load_time', 1000, actualTimestamp))
+
+      events = navTimingData.events
+      expect(events[0]).toEqual(logger.makeEvent(pageName + '-page_load', actualTimestamp))
+
+    it '_generateNavigationTimingData should only generate metrics for events that have occurred', ->
       T_HAS_NOT_OCCURRED = 0
       timing =
         navigationStart: 1000
@@ -402,14 +414,14 @@ define ["logger"], (logger) ->
       pageName = 'some'
       spyOn(weblogng, 'toPageName').andReturn(pageName);
 
-      navTimingMetrics = logger._generateNavigationTimingMetrics()
+      navTimingData = logger._generateNavigationTimingData()
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
-      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBeUndefined()
-      expect(navTimingMetrics[pageName + '-page_load_time']).toBeUndefined()
-      expect(navTimingMetrics[pageName + '-response_recv_time']).toBeUndefined()
-      expect(navTimingMetrics[pageName + '-first_byte_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-dns_lookup_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-page_load_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-response_recv_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-first_byte_time']).toBeUndefined()
 
 
   describe 'Timing API helpers', ->
