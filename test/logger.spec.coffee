@@ -18,6 +18,29 @@ define ["logger"], (logger) ->
   Logger::_createWebSocket = (apiUrl) ->
     return new MockWS(apiUrl)
 
+  makeMetric = () ->
+    metric = {}
+    metric.name = "metric_name_" + Math.floor(Math.random() * 25)
+    metric.value = Math.random() * 100
+    metric.unit = "ms"
+    metric.timestamp = epochTimeInMilliseconds()
+
+    return metric
+
+  makeMetrics = (numMetrics) ->
+    (makeMetric() for num in [1..numMetrics])
+
+  makeEvent = () ->
+    event = {}
+    event.name = "event_name_" + Math.floor(Math.random() * 25)
+    event.scope = "application"
+    event.timestamp = epochTimeInMilliseconds()
+
+    return event
+
+  makeEvents = (numEvents) ->
+    (makeEvent() for num in [1..numEvents])
+
   describe "Verify utility functions in WeblogNG client library exist", ->
     it "generateUniqueId should be defined", ->
       expect(generateUniqueId).toBeDefined()
@@ -135,7 +158,6 @@ define ["logger"], (logger) ->
     it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
       for num in [1..100]
         metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
-        console.log(metricName)
         metricValue = Math.random()
         timestamp = epochTimeInMilliseconds()
         truncatedTimestamp = Math.floor(timestamp / 10)
@@ -180,6 +202,27 @@ define ["logger"], (logger) ->
       message = logger._createMetricMessage(metricName, metricValue, timestamp)
 
       expect(message).toEqual(expectedLogMessage)
+
+    it 'should create a log message using provided events and metrics', ->
+
+      for num in [1..10]
+        numMetrics = Math.floor((Math.random() * 10) + 1)
+        metrics = makeMetrics(numMetrics)
+
+        numEvents = Math.floor((Math.random() * 10) + 1)
+        events = makeEvents(numEvents)
+
+        message = logger._createLogMessage(events, metrics)
+
+        expectedLogMessage =
+          "apiAccessKey": apiKey,
+          "context": {},
+          "events": events,
+          "metrics": metrics
+
+        expect(events.length).toBe(numEvents)
+        expect(metrics.length).toBe(numMetrics)
+        expect(message).toEqual(expectedLogMessage)
 
     it 'should sanitize metric names', ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
@@ -297,7 +340,7 @@ define ["logger"], (logger) ->
 
       expect(logger._waitForReadyStateComplete).toHaveBeenCalled()
 
-    it '_publishNavigationTimingMetrics should generate nav timing metrics and then send metrics to server', ->
+    it '_publishNavigationTimingData should generate nav timing metrics and then send metrics to server', ->
       timing = {}
       window.performance = {vendor: 'standard', timing: timing}
 
@@ -305,18 +348,25 @@ define ["logger"], (logger) ->
 
       expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
 
-      mockNavTimingMetrics = {metricName: 42}
-      spyOn(logger, '_generateNavigationTimingMetrics').andReturn(mockNavTimingMetrics)
-      spyOn(logger, 'sendMetric')
+      mockData =
+        events: [
+          logger.makeEvent("app-page_load")
+        ]
+        metrics: [
+          logger.makeMetric("metricName", 42)
+        ]
 
-      logger._publishNavigationTimingMetrics()
+      spyOn(logger, '_generateNavigationTimingData').andReturn(mockData)
+      spyOn(logger.webSocket, 'send')
+
+      logger._publishNavigationTimingData()
 
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
-      expect(logger._generateNavigationTimingMetrics).toHaveBeenCalled()
-      expect(logger.sendMetric).toHaveBeenCalledWith("metricName", mockNavTimingMetrics.metricName)
+      expect(logger._generateNavigationTimingData).toHaveBeenCalled()
+      expect(logger.webSocket.send).toHaveBeenCalledWith(logger._createLogMessage(mockData.events, mockData.metrics))
 
-    it '_generateNavigationTimingMetrics should generate metrics using performance object', ->
+    it '_generateNavigationTimingData should generate metrics using performance object', ->
       timing =
         navigationStart: 1000
         dnsLookupStart: 1100
@@ -331,16 +381,26 @@ define ["logger"], (logger) ->
       pageName = 'some'
       spyOn(weblogng, 'toPageName').andReturn(pageName);
 
-      navTimingMetrics = logger._generateNavigationTimingMetrics()
+      navTimingData = logger._generateNavigationTimingData()
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
-      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBe(150)
-      expect(navTimingMetrics[pageName + '-first_byte_time']).toBe(250)
-      expect(navTimingMetrics[pageName + '-response_recv_time']).toBe(200)
-      expect(navTimingMetrics[pageName + '-page_load_time']).toBe(1000)
+      expect(navTimingData.events).not.toBeNull()
+      expect(navTimingData.metrics).not.toBeNull()
 
-    it '_generateNavigationTimingMetrics should only generate metrics for events that have occurred', ->
+      metrics = navTimingData.metrics
+
+      actualTimestamp = metrics[0].timestamp
+
+      expect(metrics[0]).toEqual(logger.makeMetric(pageName + '-dns_lookup_time', 150, actualTimestamp))
+      expect(metrics[1]).toEqual(logger.makeMetric(pageName + '-first_byte_time', 250, actualTimestamp))
+      expect(metrics[2]).toEqual(logger.makeMetric(pageName + '-response_recv_time', 200, actualTimestamp))
+      expect(metrics[3]).toEqual(logger.makeMetric(pageName + '-page_load_time', 1000, actualTimestamp))
+
+      events = navTimingData.events
+      expect(events[0]).toEqual(logger.makeEvent(pageName + '-page_load', actualTimestamp))
+
+    it '_generateNavigationTimingData should only generate metrics for events that have occurred', ->
       T_HAS_NOT_OCCURRED = 0
       timing =
         navigationStart: 1000
@@ -356,14 +416,14 @@ define ["logger"], (logger) ->
       pageName = 'some'
       spyOn(weblogng, 'toPageName').andReturn(pageName);
 
-      navTimingMetrics = logger._generateNavigationTimingMetrics()
+      navTimingData = logger._generateNavigationTimingData()
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
-      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBeUndefined()
-      expect(navTimingMetrics[pageName + '-page_load_time']).toBeUndefined()
-      expect(navTimingMetrics[pageName + '-response_recv_time']).toBeUndefined()
-      expect(navTimingMetrics[pageName + '-first_byte_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-dns_lookup_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-page_load_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-response_recv_time']).toBeUndefined()
+      expect(navTimingData[pageName + '-first_byte_time']).toBeUndefined()
 
 
   describe 'Timing API helpers', ->

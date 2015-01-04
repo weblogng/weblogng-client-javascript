@@ -89,6 +89,20 @@ class weblogng.Logger
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()
 
+  makeEvent: (name, timestamp = epochTimeInMilliseconds()) ->
+    return {
+    "name": name
+      , "scope": "application"
+      , "timestamp": timestamp
+    }
+
+  makeMetric: (name, value, timestamp = epochTimeInMilliseconds()) ->
+    return {
+    "name": name
+      , "value": value
+      , "unit": "ms"
+      , "timestamp": timestamp
+    }
 
   sendMetric: (metricName, metricValue) ->
     metricMessage = @_createMetricMessage(@metricNamePrefix + metricName, metricValue)
@@ -110,6 +124,21 @@ class weblogng.Logger
           "timestamp": timestamp
         }
       ]
+
+    return message
+
+  _createLogMessage: (events = [], metrics = []) ->
+    for event in events
+      event.name = @_sanitizeMetricName(event.name)
+
+    for metric in metrics
+      metric.name = @_sanitizeMetricName(metric.name)
+
+    message =
+      "apiAccessKey": @apiKey,
+      "context": {},
+      "events": events
+      "metrics": metrics
 
     return message
 
@@ -157,7 +186,7 @@ class weblogng.Logger
       return
 
     onReadyStateComplete = =>
-      @_publishNavigationTimingMetrics()
+      @_publishNavigationTimingData()
 
     @_waitForReadyStateComplete(onReadyStateComplete, 10)
 
@@ -179,36 +208,56 @@ class weblogng.Logger
     , 1000
     return
 
-  _publishNavigationTimingMetrics: () ->
-    for name, value of @_generateNavigationTimingMetrics()
-      @sendMetric("#{name}", value)
+  _publishNavigationTimingData: () ->
+    timingData = @_generateNavigationTimingData()
+    logMessage = @_createLogMessage(timingData.events, timingData.metrics)
+    @webSocket.send(logMessage)
 
     return
 
-  _generateNavigationTimingMetrics: () ->
+  _generateNavigationTimingData: () ->
     performance = locatePerformanceObject()
     baseMetricName = toPageName(location)
+    timestamp = epochTimeInMilliseconds()
 
-    metrics = {}
+    events = []
+    metrics = []
 
     if performance.timing.dnsLookupStart > 0 and performance.timing.dnsLookupEnd > 0
-      metrics[(baseMetricName + "-dns_lookup_time")] = (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart)
+      metric = @makeMetric((baseMetricName + "-dns_lookup_time"),
+        (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart),
+        timestamp)
+      metrics.push(metric)
 
     if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
-      metrics[(baseMetricName + "-first_byte_time")] = (performance.timing.responseStart - performance.timing.connectStart)
+      metric = @makeMetric((baseMetricName + "-first_byte_time"),
+        (performance.timing.responseStart - performance.timing.connectStart),
+        timestamp)
+      metrics.push(metric)
 
     if performance.timing.responseStart > 0 and performance.timing.responseEnd > 0
-      metrics[(baseMetricName + "-response_recv_time")] = (performance.timing.responseEnd - performance.timing.responseStart)
+      metric = @makeMetric((baseMetricName + "-response_recv_time"),
+        (performance.timing.responseEnd - performance.timing.responseStart),
+        timestamp)
+      metrics.push(metric)
 
     if performance.timing.loadEventStart > 0
-      metrics[(baseMetricName + "-page_load_time")] = (performance.timing.loadEventStart - performance.timing.navigationStart)
+      metric = @makeMetric((baseMetricName + "-page_load_time"),
+        (performance.timing.loadEventStart - performance.timing.navigationStart),
+        timestamp)
+      metrics.push(metric)
+      events.push(@makeEvent(baseMetricName + "-page_load"))
 
-    return metrics
+    data =
+      metrics: metrics
+      events: events
+
+    return data
 
   _scheduleReadyStateCheck: () ->
 
     if "complete" == document.readyState
-      @_publishNavigationTimingMetrics()
+      @_publishNavigationTimingData()
     else
       setTimeout(@_scheduleReadyStateCheck, 1000)
 
