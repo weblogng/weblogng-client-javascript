@@ -89,6 +89,20 @@ class weblogng.Logger
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()
 
+  makeEvent: (name, timestamp = epochTimeInMilliseconds()) ->
+    return {
+    "name": name
+      , "scope": "application"
+      , "timestamp": timestamp
+    }
+
+  makeMetric: (name, value, timestamp = epochTimeInMilliseconds()) ->
+    return {
+    "name": name
+      , "value": value
+      , "unit": "ms"
+      , "timestamp": timestamp
+    }
 
   sendMetric: (metricName, metricValue) ->
     metricMessage = @_createMetricMessage(@metricNamePrefix + metricName, metricValue)
@@ -195,28 +209,42 @@ class weblogng.Logger
     return
 
   _publishNavigationTimingData: () ->
-    for name, value of @_generateNavigationTimingMetrics()
-      @sendMetric("#{name}", value)
+    metrics = @_generateNavigationTimingMetrics()
+    logMessage = @_createLogMessage(events = [], metrics = metrics)
+    @webSocket.send(logMessage)
 
     return
 
   _generateNavigationTimingMetrics: () ->
     performance = locatePerformanceObject()
     baseMetricName = toPageName(location)
+    timestamp = epochTimeInMilliseconds()
 
-    metrics = {}
+    metrics = []
 
     if performance.timing.dnsLookupStart > 0 and performance.timing.dnsLookupEnd > 0
-      metrics[(baseMetricName + "-dns_lookup_time")] = (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart)
+      metric = @makeMetric((baseMetricName + "-dns_lookup_time"),
+        (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart),
+        timestamp)
+      metrics.push(metric)
 
     if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
-      metrics[(baseMetricName + "-first_byte_time")] = (performance.timing.responseStart - performance.timing.connectStart)
+      metric = @makeMetric((baseMetricName + "-first_byte_time"),
+        (performance.timing.responseStart - performance.timing.connectStart),
+        timestamp)
+      metrics.push(metric)
 
     if performance.timing.responseStart > 0 and performance.timing.responseEnd > 0
-      metrics[(baseMetricName + "-response_recv_time")] = (performance.timing.responseEnd - performance.timing.responseStart)
+      metric = @makeMetric((baseMetricName + "-response_recv_time"),
+        (performance.timing.responseEnd - performance.timing.responseStart),
+        timestamp)
+      metrics.push(metric)
 
     if performance.timing.loadEventStart > 0
-      metrics[(baseMetricName + "-page_load_time")] = (performance.timing.loadEventStart - performance.timing.navigationStart)
+      metric = @makeMetric((baseMetricName + "-page_load_time"),
+        (performance.timing.loadEventStart - performance.timing.navigationStart),
+        timestamp)
+      metrics.push(metric)
 
     return metrics
 

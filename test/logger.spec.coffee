@@ -348,16 +348,17 @@ define ["logger"], (logger) ->
 
       expect(weblogng.hasNavigationTimingAPI()).toBeTruthy()
 
-      mockNavTimingMetrics = {metricName: 42}
-      spyOn(logger, '_generateNavigationTimingMetrics').andReturn(mockNavTimingMetrics)
-      spyOn(logger, 'sendMetric')
+      mockMetrics = [logger.makeMetric("metricName", 42)]
+      spyOn(logger, '_generateNavigationTimingMetrics').andReturn(mockMetrics)
+      spyOn(logger.webSocket, 'send')
 
       logger._publishNavigationTimingData()
 
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
       expect(logger._generateNavigationTimingMetrics).toHaveBeenCalled()
-      expect(logger.sendMetric).toHaveBeenCalledWith("metricName", mockNavTimingMetrics.metricName)
+      events = []
+      expect(logger.webSocket.send).toHaveBeenCalledWith(logger._createLogMessage(events, mockMetrics))
 
     it '_generateNavigationTimingMetrics should generate metrics using performance object', ->
       timing =
@@ -378,10 +379,12 @@ define ["logger"], (logger) ->
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
-      expect(navTimingMetrics[pageName + '-dns_lookup_time']).toBe(150)
-      expect(navTimingMetrics[pageName + '-first_byte_time']).toBe(250)
-      expect(navTimingMetrics[pageName + '-response_recv_time']).toBe(200)
-      expect(navTimingMetrics[pageName + '-page_load_time']).toBe(1000)
+      actualTimestamp = navTimingMetrics[0].timestamp
+
+      expect(navTimingMetrics[0]).toEqual(logger.makeMetric(pageName + '-dns_lookup_time', 150, actualTimestamp))
+      expect(navTimingMetrics[1]).toEqual(logger.makeMetric(pageName + '-first_byte_time', 250, actualTimestamp))
+      expect(navTimingMetrics[2]).toEqual(logger.makeMetric(pageName + '-response_recv_time', 200, actualTimestamp))
+      expect(navTimingMetrics[3]).toEqual(logger.makeMetric(pageName + '-page_load_time', 1000, actualTimestamp))
 
     it '_generateNavigationTimingMetrics should only generate metrics for events that have occurred', ->
       T_HAS_NOT_OCCURRED = 0
