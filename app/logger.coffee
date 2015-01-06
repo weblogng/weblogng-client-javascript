@@ -78,6 +78,9 @@ class weblogng.Logger
     @apiUrl = "https://#{apiHost}/v2/log"
     @webSocket = @_createWebSocket(@apiUrl)
     @timers = {}
+    @buffers =
+      events: []
+      metrics: []
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
 
@@ -91,22 +94,25 @@ class weblogng.Logger
 
   makeEvent: (name, timestamp = epochTimeInMilliseconds()) ->
     return {
-    "name": name
+    "name": @metricNamePrefix + name
       , "scope": "application"
       , "timestamp": timestamp
     }
 
   makeMetric: (name, value, timestamp = epochTimeInMilliseconds()) ->
     return {
-    "name": name
+    "name": @metricNamePrefix + name
       , "value": value
       , "unit": "ms"
       , "timestamp": timestamp
     }
 
-  sendMetric: (metricName, metricValue) ->
-    metricMessage = @_createMetricMessage(@metricNamePrefix + metricName, metricValue)
-    @webSocket.send(metricMessage)
+  sendMetric: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
+    @buffers.metrics.push(@makeMetric(metricName, metricValue, timestamp))
+    @_triggerSendToAPI()
+
+  _triggerSendToAPI: () ->
+    @webSocket.send(@_createLogMessage(@buffers.events, @buffers.metrics))
 
   _createWebSocket: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)
