@@ -48,6 +48,7 @@
     "grunt-karma": "~0.6.2",
     "karma-coverage": "~0.1.0",
     "bower": "~1.2.8",
-    "grunt-bower-requirejs": "~0.8.4"
+    "grunt-bower-requirejs": "~0.8.4",
+    "lodash-cli": "2.4.1"
   }
 }
