@@ -300,14 +300,20 @@ define ["logger"], (logger) ->
         return
 
       metric_name = "some_operation"
-      spyOn(logger, 'sendMetric')
+      spyOn(logger, 'sendMetric').andCallThrough()
       spyOn(logger, 'recordStart')
       spyOn(logger, 'recordFinishAndSendMetric')
 
       logger.executeWithTiming(metric_name, my_awesome_function)
 
       expect(executed).toBeTruthy()
-      expect(logger.sendMetric).toHaveBeenCalledWith(metric_name, 0)
+
+      expect(logger.buffers.metrics.length).toBe(1)
+      expect(logger.buffers.metrics[0].name).toBe(metric_name)
+      expect(logger.buffers.metrics[0].value).toBeGreaterThan(-1)
+      expect(logger.buffers.metrics[0].value).toBeLessThan(3)
+
+      expect(logger.sendMetric).toHaveBeenCalled()
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
