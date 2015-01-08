@@ -9,7 +9,7 @@ weblogng.generateUniqueId = (length = 8) ->
 # thanks, @contra!
 # https://gist.github.com/contra/2477684
 # Most throttles are actually just delays
-# This will only call the function if it hasn't been triggered in (delay)ms
+# This will only call the function if it hasn't been triggered in <delay> ms
 weblogng.throttle = (fn, delay) ->
   return fn if delay is 0
   timer = false
