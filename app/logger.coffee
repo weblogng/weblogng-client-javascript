@@ -6,6 +6,19 @@ weblogng.generateUniqueId = (length = 8) ->
   id += Math.random().toString(36).substr(2) while id.length < length
   id.substr 0, length
 
+# thanks, @contra!
+# https://gist.github.com/contra/2477684
+# Most throttles are actually just delays
+# This will only call the function if it hasn't been triggered in <delay> ms
+weblogng.throttle = (fn, delay) ->
+  return fn if delay is 0
+  timer = false
+  return ->
+    return if timer
+    timer = true
+    setTimeout (-> timer = false), delay unless delay is -1
+    fn arguments...
+
 weblogng.epochTimeInMilliseconds = () ->
   new Date().getTime()
 
@@ -78,6 +91,9 @@ class weblogng.Logger
     @apiUrl = "https://#{apiHost}/v2/log"
     @webSocket = @_createWebSocket(@apiUrl)
     @timers = {}
+    @buffers =
+      events: []
+      metrics: []
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
 
@@ -89,24 +105,42 @@ class weblogng.Logger
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()
 
+    _sendToAPI = =>
+      @_sendToAPI()
+
+    @_throttledSendToAPI = weblogng.throttle(_sendToAPI, 5000)
+
+
   makeEvent: (name, timestamp = epochTimeInMilliseconds()) ->
     return {
-    "name": name
+    "name": @metricNamePrefix + name
       , "scope": "application"
       , "timestamp": timestamp
     }
 
   makeMetric: (name, value, timestamp = epochTimeInMilliseconds()) ->
     return {
-    "name": name
+    "name": @metricNamePrefix + name
       , "value": value
       , "unit": "ms"
       , "timestamp": timestamp
     }
 
-  sendMetric: (metricName, metricValue) ->
-    metricMessage = @_createMetricMessage(@metricNamePrefix + metricName, metricValue)
-    @webSocket.send(metricMessage)
+  _sendToAPI: () ->
+    events = @buffers.events
+    metrics = @buffers.metrics
+    @buffers.events = []
+    @buffers.metrics = []
+
+    @webSocket.send(@_createLogMessage(events, metrics))
+
+
+  _triggerSendToAPI: () ->
+    @_throttledSendToAPI()
+
+  sendMetric: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
+    @buffers.metrics.push(@makeMetric(metricName, metricValue, timestamp))
+    @_triggerSendToAPI()
 
   _createWebSocket: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)

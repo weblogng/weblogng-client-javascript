@@ -133,27 +133,55 @@ define ["logger"], (logger) ->
     it 'should build secure loggin api urls', ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
-    it 'should send metrics via the apiConnection', ->
-      spyOn(logger.webSocket, 'send')
-      spyOn(logger, '_createMetricMessage')
-
-      logger.sendMetric('metric_name', 34)
-
-      expect(logger._createMetricMessage).toHaveBeenCalled()
-      expect(logger.webSocket.send).toHaveBeenCalled()
-
-    it 'sendMetric should prefix metric names with metricNamePrefix property', ->
+    it 'should make events using the provided data and configured logger prefix', ->
       prefix = "my-prefix-"
       logger = new Logger(apiHost, apiKey, {metricNamePrefix: prefix})
+
+      for num in [1..25]
+        eventName = "event_name_#{num}_" + Math.floor(Math.random() * 1000)
+        timestamp = epochTimeInMilliseconds()
+
+        event = logger.makeEvent(eventName, timestamp)
+
+        expect(event.name).toBe(prefix + eventName)
+        expect(event.timestamp).toBe(timestamp)
+
+    it 'should make metrics using the provided data and configured logger prefix', ->
+      prefix = "my-prefix-"
+      logger = new Logger(apiHost, apiKey, {metricNamePrefix: prefix})
+
+      for num in [1..25]
+        metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
+        metricValue = Math.random()
+        timestamp = epochTimeInMilliseconds()
+
+        metric = logger.makeMetric(metricName, metricValue, timestamp)
+
+        expect(metric.name).toBe(prefix + metricName)
+        expect(metric.value).toBe(metricValue)
+        expect(metric.timestamp).toBe(timestamp)
+        expect(metric.unit).toBe("ms")
+
+    it 'sendMetric should store metrics in buffer and trigger a send via the apiConnection', ->
       spyOn(logger.webSocket, 'send')
       spyOn(logger, '_createMetricMessage')
+      spyOn(logger, '_createLogMessage')
+      spyOn(logger, '_triggerSendToAPI')
 
       metricName = 'metric_name'
-      metricValue = 42
-      logger.sendMetric(metricName, metricValue)
+      metricValue = 34
+      timestamp = epochTimeInMilliseconds()
 
-      expect(logger._createMetricMessage).toHaveBeenCalledWith(prefix + metricName, metricValue)
-      expect(logger.webSocket.send).toHaveBeenCalled()
+      logger.sendMetric(metricName, metricValue, timestamp)
+
+      expect(logger._triggerSendToAPI).toHaveBeenCalled()
+
+      expect(logger._createMetricMessage).not.toHaveBeenCalled()
+      expect(logger._createLogMessage).not.toHaveBeenCalled()
+      expect(logger.webSocket.send).not.toHaveBeenCalled()
+
+      expect(logger.buffers.events).toEqual([])
+      expect(logger.buffers.metrics).toEqual([logger.makeMetric(metricName, metricValue, timestamp)])
 
     it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
       for num in [1..100]
@@ -272,14 +300,22 @@ define ["logger"], (logger) ->
         return
 
       metric_name = "some_operation"
-      spyOn(logger, 'sendMetric')
+      spyOn(logger, 'sendMetric').andCallThrough()
+      spyOn(logger, '_triggerSendToAPI')
       spyOn(logger, 'recordStart')
       spyOn(logger, 'recordFinishAndSendMetric')
 
       logger.executeWithTiming(metric_name, my_awesome_function)
 
       expect(executed).toBeTruthy()
-      expect(logger.sendMetric).toHaveBeenCalledWith(metric_name, 0)
+
+      expect(logger.buffers.metrics.length).toBe(1)
+      expect(logger.buffers.metrics[0].name).toBe(metric_name)
+      expect(logger.buffers.metrics[0].value).toBeGreaterThan(-1)
+      expect(logger.buffers.metrics[0].value).toBeLessThan(3)
+
+      expect(logger.sendMetric).toHaveBeenCalled()
+      expect(logger._triggerSendToAPI).toHaveBeenCalled()
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
