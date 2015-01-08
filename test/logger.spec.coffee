@@ -301,6 +301,7 @@ define ["logger"], (logger) ->
 
       metric_name = "some_operation"
       spyOn(logger, 'sendMetric').andCallThrough()
+      spyOn(logger, '_triggerSendToAPI')
       spyOn(logger, 'recordStart')
       spyOn(logger, 'recordFinishAndSendMetric')
 
@@ -314,6 +315,7 @@ define ["logger"], (logger) ->
       expect(logger.buffers.metrics[0].value).toBeLessThan(3)
 
       expect(logger.sendMetric).toHaveBeenCalled()
+      expect(logger._triggerSendToAPI).toHaveBeenCalled()
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
