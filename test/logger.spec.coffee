@@ -336,6 +336,26 @@ define ["logger"], (logger) ->
       expect(logger.recordStart).not.toHaveBeenCalled()
       expect(logger.recordFinishAndSendMetric).not.toHaveBeenCalled()
 
+  describe 'Logger event support', ->
+    logger = null
+    apiHost = "localhost:9000"
+    apiKey = "abcd-1234"
+
+    beforeEach () ->
+      logger = new Logger(apiHost, apiKey)
+
+    it 'should buffer an event when recordEvent is called', ->
+      spyOn(logger, '_triggerSendToAPI')
+
+      for num in [1..10]
+        eventName = "appEvent-#{generateUniqueId(3)}"
+        timestamp = epochTimeInMilliseconds()
+        logger.recordEvent(eventName, timestamp)
+
+        expect(logger.buffers.events).toContain(logger.makeEvent(eventName, timestamp))
+        expect(logger._triggerSendToAPI).toHaveBeenCalled()
+
+
   describe 'Logger Navigation Timing API support', ->
     logger = null
     timing = null
