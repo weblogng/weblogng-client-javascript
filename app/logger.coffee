@@ -214,6 +214,10 @@ class weblogng.Logger
 
     return
 
+  recordEvent: (eventName, timestamp=epochTimeInMilliseconds()) ->
+    @buffers.events.push(@makeEvent(eventName, timestamp))
+    @_triggerSendToAPI()
+
   _initNavigationTimingPublishProcess: () ->
 
     if not hasNavigationTimingAPI()
