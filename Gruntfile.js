@@ -36,7 +36,7 @@ module.exports = function (grunt) {
         },
         files: {
           'dist/app/logger.js': ['app/logger.coffee']
-          , 'dist/test/logger.spec.js': ['test/logger.spec.coffee']
+          ,'dist/test/logger.spec.js': ['test/logger.spec.coffee']
         }
       }
     },
@@ -83,17 +83,10 @@ module.exports = function (grunt) {
         },
         src: 'Gruntfile.js'
       },
-
       app: {
-        options: {
-          jshintrc: 'app/.jshintrc'
-        },
         src: ['app/**/*.js']
-      },
-      test: {
-        options: {
-          jshintrc: 'test/.jshintrc'
-        },
+      }
+      , test: {
         src: ['test/**/*.js']
       }
     },
@@ -129,6 +122,7 @@ module.exports = function (grunt) {
     'clean',
     'coffee:development',
     'copy:development',
+    'jshint',
     'karma:continuous',
     'uglify'
   ]);
