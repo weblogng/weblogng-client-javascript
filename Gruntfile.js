@@ -62,22 +62,7 @@ module.exports = function (grunt) {
         dest: 'dist/app/logger.min.js'
       }
     },
-    jasmine: {
-      test: {
-        src: ['dist/app/**/*.js'],
-        options: {
-          specs: 'dist/test/*.spec.js',
-          helpers: 'test/*Helper.js',
-          template: require('grunt-template-jasmine-requirejs'),
-          templateOptions: {
-            requireConfigFile: 'app/config.js',
-            requireConfig: {
-              baseUrl: 'dist/app/'
-            }
-          }
-        }
-      }
-    },
+
     karma: {
       options: {
         configFile: 'karma.conf.js'
@@ -90,6 +75,7 @@ module.exports = function (grunt) {
       }
 
     },
+
     jshint: {
       gruntfile: {
         options: {
@@ -97,6 +83,7 @@ module.exports = function (grunt) {
         },
         src: 'Gruntfile.js'
       },
+
       app: {
         options: {
           jshintrc: 'app/.jshintrc'
@@ -110,6 +97,7 @@ module.exports = function (grunt) {
         src: ['test/**/*.js']
       }
     },
+
     watch: {
       gruntfile: {
         files: 'Gruntfile.js',
@@ -123,12 +111,8 @@ module.exports = function (grunt) {
         files: ['test/**/*.coffee'],
         tasks: ['default']
       }
-    },
-    bower: {
-      target: {
-        rjsConfig: 'app/config.js'
-      }
     }
+
   });
 
   // These plugins provide necessary tasks.
@@ -136,7 +120,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-karma');
@@ -146,9 +129,9 @@ module.exports = function (grunt) {
     'clean',
     'coffee:development',
     'copy:development',
-    'jasmine',
+    'karma:continuous',
     'uglify'
   ]);
 
-  grunt.registerTask('test', ['jasmine']);
+  grunt.registerTask('test', ['karma:continuous']);
 };
