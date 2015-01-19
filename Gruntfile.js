@@ -58,8 +58,8 @@ module.exports = function (grunt) {
         banner: '<%= banner %>'
       },
       dist: {
-        src: '<%= concat.dist.dest %>',
-        dest: 'dist/require.min.js'
+        src: 'dist/app/logger.js',
+        dest: 'dist/app/logger.min.js'
       }
     },
     jasmine: {
