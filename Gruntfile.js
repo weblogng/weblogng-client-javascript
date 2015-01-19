@@ -41,17 +41,6 @@ module.exports = function (grunt) {
       }
     },
 
-    concat: {
-      options: {
-        banner: '<%= banner %>',
-        stripBanners: true
-      },
-      dist: {
-        src: ['bower_components/requirejs/require.js', '<%= concat.dist.dest %>'],
-        dest: 'dist/require.js'
-      }
-    },
-
     copy: {
       development: {
         files: [
@@ -139,71 +128,27 @@ module.exports = function (grunt) {
       target: {
         rjsConfig: 'app/config.js'
       }
-    },
-    requirejs: {
-      compile: {
-        options: {
-          name: 'config',
-          mainConfigFile: 'app/config.js',
-          out: '<%= concat.dist.dest %>',
-          optimize: 'none',
-          logLevel: 0
-        }
-      }
-    },
-    connect: {
-      development: {
-        options: {
-          keepalive: true
-        }
-      },
-      production: {
-        options: {
-          keepalive: true,
-          port: 8000,
-          middleware: function (connect, options) {
-            return [
-              // rewrite requirejs to the compiled version
-              function (req, res, next) {
-                if (req.url === '/bower_components/requirejs/require.js') {
-                  req.url = '/dist/require.min.js';
-                }
-                next();
-              },
-              connect.static(options.base)
-            ];
-          }
-        }
-      }
     }
   });
 
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-bower-requirejs');
-  grunt.loadNpmTasks('grunt-contrib-requirejs');
-  grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-karma');
 
   // Default task.
   grunt.registerTask('default', [
     'clean',
     'coffee:development',
-    'bower',
-    'requirejs',
     'copy:development',
     'jasmine',
-    'concat',
     'uglify'
   ]);
-  grunt.registerTask('preview', ['connect:development']);
-  grunt.registerTask('preview-live', ['default', 'connect:production']);
+
   grunt.registerTask('test', ['jasmine']);
 };
