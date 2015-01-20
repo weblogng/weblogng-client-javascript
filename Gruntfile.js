@@ -84,10 +84,10 @@ module.exports = function (grunt) {
         src: 'Gruntfile.js'
       },
       app: {
-        src: ['app/**/*.js']
-      }
-      , test: {
-        src: ['test/**/*.js']
+        options: {
+          jshintrc: 'app/.jshintrc'
+        },
+        src: ['dist/app/logger.js']
       }
     },
 
