@@ -16,7 +16,10 @@ weblogng.throttle = (fn, delay) ->
   return ->
     return if timer
     timer = true
-    setTimeout (-> timer = false), delay unless delay is -1
+    timeoutFn = ->
+      timer = false
+      return timer
+    setTimeout timeoutFn, delay unless delay is -1
     fn arguments...
 
 weblogng.epochTimeInMilliseconds = () ->
