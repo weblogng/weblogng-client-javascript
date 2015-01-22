@@ -1,3 +1,6 @@
+randInt = (max = 10)->
+  Math.floor((Math.random() * max) + 1)
+
 define ["logger"], (logger) ->
 
   ###
@@ -20,7 +23,7 @@ define ["logger"], (logger) ->
 
   makeMetric = () ->
     metric = {}
-    metric.name = "metric_name_" + Math.floor(Math.random() * 25)
+    metric.name = "metric_name_" + randInt(25)
     metric.value = Math.random() * 100
     metric.unit = "ms"
     metric.timestamp = epochTimeInMilliseconds()
@@ -32,7 +35,7 @@ define ["logger"], (logger) ->
 
   makeEvent = () ->
     event = {}
-    event.name = "event_name_" + Math.floor(Math.random() * 25)
+    event.name = "event_name_" + randInt(25)
     event.scope = "application"
     event.timestamp = epochTimeInMilliseconds()
 
@@ -138,7 +141,7 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey, {application: application})
 
       for num in [1..25]
-        eventName = "event_name_#{num}_" + Math.floor(Math.random() * 1000)
+        eventName = "event_name_#{num}_" + randInt(1000)
         timestamp = epochTimeInMilliseconds()
 
         event = logger.makeEvent(eventName, timestamp)
@@ -151,7 +154,7 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey, {application: application})
 
       for num in [1..25]
-        metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
+        metricName = "metric_name_#{num}_" + randInt(1000)
         metricValue = Math.random()
         timestamp = epochTimeInMilliseconds()
 
@@ -234,10 +237,10 @@ define ["logger"], (logger) ->
     it 'should create a log message using provided events and metrics', ->
 
       for num in [1..10]
-        numMetrics = Math.floor((Math.random() * 10) + 1)
+        numMetrics = randInt()
         metrics = makeMetrics(numMetrics)
 
-        numEvents = Math.floor((Math.random() * 10) + 1)
+        numEvents = randInt()
         events = makeEvents(numEvents)
 
         message = logger._createLogMessage(events, metrics)
@@ -254,15 +257,12 @@ define ["logger"], (logger) ->
 
     it 'should include default context in log message', ->
       options =
-        "application" : "App Name - #{Math.floor((Math.random() * 10) + 1)}"
+        "application" : "App Name - #{randInt()}"
       logger = new Logger(apiHost, apiKey, options)
 
       for num in [1..10]
-        numMetrics = Math.floor((Math.random() * 10) + 1)
-        metrics = makeMetrics(numMetrics)
-
-        numEvents = Math.floor((Math.random() * 10) + 1)
-        events = makeEvents(numEvents)
+        metrics = makeMetrics(randInt())
+        events = makeEvents(randInt())
 
         message = logger._createLogMessage(events, metrics)
 
