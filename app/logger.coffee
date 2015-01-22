@@ -88,10 +88,11 @@ class weblogng.Timer
 class weblogng.Logger
   constructor: (@apiHost, @apiKey, @options = {
     publishNavigationTimingMetrics: true
-    , metricNamePrefix: ""
+    , application: ""
   }) ->
     @id = generateUniqueId()
     @apiUrl = "https://#{apiHost}/v2/log"
+    @defaultContext = {}
     @webSocket = @_createWebSocket(@apiUrl)
     @timers = {}
     @buffers =
@@ -100,10 +101,10 @@ class weblogng.Logger
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
 
-    if @options && @options.metricNamePrefix
-      @metricNamePrefix = @options.metricNamePrefix
+    if @options && @options.application
+      @defaultContext.application = @options.application
     else
-      @metricNamePrefix = ""
+      delete @defaultContext.application
 
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()
@@ -116,14 +117,14 @@ class weblogng.Logger
 
   makeEvent: (name, timestamp = epochTimeInMilliseconds()) ->
     return {
-    "name": @metricNamePrefix + name
+    "name": name
       , "scope": "application"
       , "timestamp": timestamp
     }
 
   makeMetric: (name, value, timestamp = epochTimeInMilliseconds()) ->
     return {
-    "name": @metricNamePrefix + name
+    "name": name
       , "value": value
       , "unit": "ms"
       , "timestamp": timestamp
@@ -171,9 +172,14 @@ class weblogng.Logger
     for metric in metrics
       metric.name = @_sanitizeMetricName(metric.name)
 
+    context = {}
+
+    if @options.application
+      context.application = @options.application
+
     message =
       "apiAccessKey": @apiKey,
-      "context": {},
+      "context": context,
       "events": events
       "metrics": metrics
 

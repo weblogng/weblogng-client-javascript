@@ -1,3 +1,6 @@
+randInt = (max = 10)->
+  Math.floor((Math.random() * max) + 1)
+
 define ["logger"], (logger) ->
 
   ###
@@ -20,7 +23,7 @@ define ["logger"], (logger) ->
 
   makeMetric = () ->
     metric = {}
-    metric.name = "metric_name_" + Math.floor(Math.random() * 25)
+    metric.name = "metric_name_" + randInt(25)
     metric.value = Math.random() * 100
     metric.unit = "ms"
     metric.timestamp = epochTimeInMilliseconds()
@@ -32,7 +35,7 @@ define ["logger"], (logger) ->
 
   makeEvent = () ->
     event = {}
-    event.name = "event_name_" + Math.floor(Math.random() * 25)
+    event.name = "event_name_" + randInt(25)
     event.scope = "application"
     event.timestamp = epochTimeInMilliseconds()
 
@@ -91,7 +94,7 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey)
 
       expect(logger.publishNavigationTimingMetrics).toBeTruthy()
-      expect(logger.metricNamePrefix).toBe("")
+      expect(logger.defaultContext.application).toBeUndefined()
 
     it 'should use publishNavigationTimingMetrics option when specified', ->
       logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: true})
@@ -102,11 +105,11 @@ define ["logger"], (logger) ->
 
       expect(logger.publishNavigationTimingMetrics).toBeFalsy()
 
-    it 'should use metricNamePrefix option when specified', ->
-      expectedPrefix = "unit-test"
-      logger = new Logger(apiHost, apiKey, {metricNamePrefix: expectedPrefix})
+    it 'should retain optional application name as part of default context, when specified', ->
+      application = "unit-test"
+      logger = new Logger(apiHost, apiKey, {application: application})
 
-      expect(logger.metricNamePrefix).toBe(expectedPrefix)
+      expect(logger.defaultContext.application).toBe(application)
 
 #    it 'should _initNavigationTimingPublishProcess when publishNavigationTimingMetrics is true and navigation timing api is available', ->
 #      # useful references:
@@ -133,31 +136,31 @@ define ["logger"], (logger) ->
     it 'should build secure loggin api urls', ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
-    it 'should make events using the provided data and configured logger prefix', ->
-      prefix = "my-prefix-"
-      logger = new Logger(apiHost, apiKey, {metricNamePrefix: prefix})
+    it 'should make events using the provided data', ->
+      application = "application-"
+      logger = new Logger(apiHost, apiKey, {application: application})
 
       for num in [1..25]
-        eventName = "event_name_#{num}_" + Math.floor(Math.random() * 1000)
+        eventName = "event_name_#{num}_" + randInt(1000)
         timestamp = epochTimeInMilliseconds()
 
         event = logger.makeEvent(eventName, timestamp)
 
-        expect(event.name).toBe(prefix + eventName)
+        expect(event.name).toBe(eventName)
         expect(event.timestamp).toBe(timestamp)
 
-    it 'should make metrics using the provided data and configured logger prefix', ->
-      prefix = "my-prefix-"
-      logger = new Logger(apiHost, apiKey, {metricNamePrefix: prefix})
+    it 'should make metrics using the provided data', ->
+      application = "application-"
+      logger = new Logger(apiHost, apiKey, {application: application})
 
       for num in [1..25]
-        metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
+        metricName = "metric_name_#{num}_" + randInt(1000)
         metricValue = Math.random()
         timestamp = epochTimeInMilliseconds()
 
         metric = logger.makeMetric(metricName, metricValue, timestamp)
 
-        expect(metric.name).toBe(prefix + metricName)
+        expect(metric.name).toBe(metricName)
         expect(metric.value).toBe(metricValue)
         expect(metric.timestamp).toBe(timestamp)
         expect(metric.unit).toBe("ms")
@@ -234,10 +237,10 @@ define ["logger"], (logger) ->
     it 'should create a log message using provided events and metrics', ->
 
       for num in [1..10]
-        numMetrics = Math.floor((Math.random() * 10) + 1)
+        numMetrics = randInt()
         metrics = makeMetrics(numMetrics)
 
-        numEvents = Math.floor((Math.random() * 10) + 1)
+        numEvents = randInt()
         events = makeEvents(numEvents)
 
         message = logger._createLogMessage(events, metrics)
@@ -251,6 +254,22 @@ define ["logger"], (logger) ->
         expect(events.length).toBe(numEvents)
         expect(metrics.length).toBe(numMetrics)
         expect(message).toEqual(expectedLogMessage)
+
+    it 'should include default context in log message', ->
+      options =
+        "application" : "App Name - #{randInt()}"
+      logger = new Logger(apiHost, apiKey, options)
+
+      for num in [1..10]
+        metrics = makeMetrics(randInt())
+        events = makeEvents(randInt())
+
+        message = logger._createLogMessage(events, metrics)
+
+        expectedContext =
+          "application": options.application
+
+        expect(message.context).toEqual(expectedContext)
 
     it 'should sanitize metric names', ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
