@@ -94,7 +94,7 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey)
 
       expect(logger.publishNavigationTimingMetrics).toBeTruthy()
-      expect(logger.defaultContext.application).toBe("")
+      expect(logger.defaultContext.application).toBeUndefined()
 
     it 'should use publishNavigationTimingMetrics option when specified', ->
       logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: true})

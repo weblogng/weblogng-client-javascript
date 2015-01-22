@@ -104,7 +104,7 @@ class weblogng.Logger
     if @options && @options.application
       @defaultContext.application = @options.application
     else
-      @defaultContext.application = ""
+      delete @defaultContext.application
 
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()
