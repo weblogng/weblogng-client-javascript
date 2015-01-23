@@ -111,21 +111,6 @@ define ["logger"], (logger) ->
 
       expect(logger.defaultContext.application).toBe(application)
 
-#    it 'should _initNavigationTimingPublishProcess when publishNavigationTimingMetrics is true and navigation timing api is available', ->
-#      # useful references:
-#      #   https://github.com/pivotal/jasmine/wiki/Spies
-#      #   http://stackoverflow.com/questions/9347631/spying-on-a-constructor-using-jasmine
-#      window.performance = {timing: 'available'}
-#
-#      spyOn(weblogng, 'Logger').andCallThrough()
-#
-#      options = {publishNavigationTimingMetrics: true}
-#      logger = new weblogng.Logger(apiHost, apiKey, options)
-#
-#      expect(weblogng.Logger).toHaveBeenCalledWith(apiHost, apiKey, options)
-#      expect(logger instanceof weblogng.Logger).toBeTruthy()
-#      expect(weblogng.Logger._initNavigationTimingPublishProcess).toHaveBeenCalled()
-
     it 'should print property data in toString', ->
       s = logger.toString()
 
