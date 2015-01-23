@@ -54,6 +54,14 @@ weblogng.toPageName = (location) ->
   else
     return "unknown-page"
 
+
+weblogng.addListener = (root, eventName, listener) ->
+  if root && eventName && listener
+    if root.addEventListener
+      root.addEventListener(eventName, listener, true)
+    else if root.attachEvent
+      root.attachEvent(eventName, listener, true)
+
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
 ###

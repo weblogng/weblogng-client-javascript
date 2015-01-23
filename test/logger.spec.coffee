@@ -1,7 +1,7 @@
 randInt = (max = 10)->
   Math.floor((Math.random() * max) + 1)
 
-define ["logger"], (logger) ->
+define ['logger'], (logger) ->
 
   ###
     Create a mock WebSocket implementation to avoid browser-dependencies.
@@ -57,6 +57,9 @@ define ["logger"], (logger) ->
     it "hasNavigationTimingAPI should be defined", ->
       expect(hasNavigationTimingAPI).toBeDefined()
 
+    it "addListener should be defined", ->
+      expect(addListener).toBeDefined()
+
   describe "Verify main classes in WeblogNG client library exist", ->
     it "Logger should be defined", ->
       expect(Logger).toBeDefined()
@@ -67,6 +70,49 @@ define ["logger"], (logger) ->
 
     it "APIConnection should be defined", ->
       expect(APIConnection).toBeDefined()
+
+  describe "weblogng.addListener", ->
+
+    it 'should ignore bad inputs', ->
+      window =
+        addEventListener: jasmine.createSpy()
+      eventName = "event-#{generateUniqueId()}"
+      listener = () ->
+
+      addListener(undefined, undefined, undefined)
+      addListener(undefined, eventName, listener)
+      addListener(window, undefined, listener)
+      addListener(window, eventName, undefined)
+
+      expect(window.addEventListener).not.toHaveBeenCalled()
+
+    it 'should add listener to the window, preferring addEventListener', ->
+      # make the window with both common listener attachment methods so
+      # preference for addEventListener can be verified
+      window =
+        addEventListener: jasmine.createSpy()
+        attachEvent: jasmine.createSpy()
+
+      eventName = "event-#{generateUniqueId()}"
+      listener = () ->
+
+      expect(window.addEventListener).toBeDefined()
+
+      addListener(window, eventName, listener)
+
+      expect(window.addEventListener).toHaveBeenCalledWith(eventName, listener, true)
+      expect(window.attachEvent).not.toHaveBeenCalled()
+
+    it 'should add listener to the window via attachEvent, when addEventListener is undefined', ->
+      eventName = "event-#{generateUniqueId()}"
+      listener = () ->
+
+      window =
+        attachEvent: jasmine.createSpy()
+
+      addListener(window, eventName, listener)
+
+      expect(window.attachEvent).toHaveBeenCalledWith(eventName, listener, true)
 
   describe 'Logger', ->
     apiHost = "localhost:9000"
