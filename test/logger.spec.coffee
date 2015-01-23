@@ -114,6 +114,17 @@ define ['logger'], (logger) ->
 
       expect(window.attachEvent).toHaveBeenCalledWith(eventName, listener, true)
 
+  describe 'weblogng.generateUniqueId', ->
+
+    it 'should generate unique identifiers with default length', ->
+      ids = {}
+      iterations = 100000
+
+      for num in [0..iterations]
+        ids[generateUniqueId()] = num
+
+      expect(Object.keys(ids).length).toBeGreaterThan(iterations - 1)
+
   describe 'Logger', ->
     apiHost = "localhost:9000"
     apiKey = "abcd-1234"
