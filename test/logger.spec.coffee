@@ -151,6 +151,7 @@ define ['logger'], (logger) ->
       logger = new Logger(apiHost, apiKey)
 
       expect(logger.publishNavigationTimingMetrics).toBeTruthy()
+      expect(logger.publishUserActive).toBeTruthy()
       expect(logger.defaultContext.application).toBeUndefined()
 
     it 'should use publishNavigationTimingMetrics option when specified', ->
@@ -161,6 +162,15 @@ define ['logger'], (logger) ->
       logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: false})
 
       expect(logger.publishNavigationTimingMetrics).toBeFalsy()
+
+    it 'should use publishUserActive option when specified', ->
+      logger = new Logger(apiHost, apiKey, {publishUserActive: true})
+
+      expect(logger.publishUserActive).toBeTruthy()
+
+      logger = new Logger(apiHost, apiKey, {publishUserActive: false})
+
+      expect(logger.publishUserActive).toBeFalsy()
 
     it 'should retain optional application name as part of default context, when specified', ->
       application = "unit-test"

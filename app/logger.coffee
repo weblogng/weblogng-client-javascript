@@ -96,6 +96,7 @@ class weblogng.Timer
 class weblogng.Logger
   constructor: (@apiHost, @apiKey, @options = {
     publishNavigationTimingMetrics: true
+    , publishUserActive: true
     , application: ""
   }) ->
     @id = generateUniqueId()
@@ -108,6 +109,7 @@ class weblogng.Logger
       metrics: []
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
+    @publishUserActive = @options && @options.publishUserActive ? true : false
 
     if @options && @options.application
       @defaultContext.application = @options.application
