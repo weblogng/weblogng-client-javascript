@@ -108,6 +108,8 @@ class weblogng.Logger
       events: []
       metrics: []
 
+    @timeOfLastUserActivity = epochTimeInMilliseconds()
+
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
     @publishUserActive = @options && @options.publishUserActive ? true : false
 
@@ -328,6 +330,8 @@ class weblogng.Logger
     addListener(window, 'keyup', @_userActivityOccurred)
 
   _userActivityOccurred: () ->
+    @timeOfLastUserActivity = epochTimeInMilliseconds()
+    return
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"

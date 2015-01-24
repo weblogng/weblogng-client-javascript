@@ -563,14 +563,25 @@ define ['logger'], (logger) ->
       window =
         addEventListener: jasmine.createSpy()
 
-    it '_initUserActivityPublishProcess should register listeners for important events', ->
       logger = new Logger(apiHost, apiKey, {publishUserActive: true})
 
+    it '_initUserActivityPublishProcess should register listeners for important events', ->
       logger._initUserActivityPublishProcess(window)
 
       expect(window.addEventListener).toHaveBeenCalledWith('mousemove', logger._userActivityOccurred, true)
       expect(window.addEventListener).toHaveBeenCalledWith('keyup', logger._userActivityOccurred, true)
 
+    it '_userActivityOccurred should record when user activity occurs', ->
+      logger.timeOfLastUserActivity = undefined
+
+      tBefore = epochTimeInMilliseconds()
+
+      logger._userActivityOccurred()
+
+      tAfter = epochTimeInMilliseconds()
+
+      expect(logger.timeOfLastUserActivity).toBeGreaterThan(tBefore - 1)
+      expect(logger.timeOfLastUserActivity).toBeLessThan(tAfter + 1)
 
 
   describe 'Timing API helpers', ->
