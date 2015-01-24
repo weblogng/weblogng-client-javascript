@@ -119,6 +119,9 @@ class weblogng.Logger
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()
 
+    if @publishUserActive
+      @_initUserActivityPublishProcess()
+
     _sendToAPI = =>
       @_sendToAPI()
 
@@ -319,6 +322,12 @@ class weblogng.Logger
       setTimeout(@_scheduleReadyStateCheck, 1000)
 
     return
+
+  _initUserActivityPublishProcess: (window = window) ->
+    addListener(window, 'mousemove', @_userActivityOccurred)
+    addListener(window, 'keyup', @_userActivityOccurred)
+
+  _userActivityOccurred: () ->
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"

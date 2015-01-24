@@ -552,6 +552,26 @@ define ['logger'], (logger) ->
       expect(navTimingData[pageName + '-response_recv_time']).toBeUndefined()
       expect(navTimingData[pageName + '-first_byte_time']).toBeUndefined()
 
+  describe 'Logger user activity support', ->
+    window = null
+    logger = null
+    apiHost = "localhost:9000"
+    apiKey = "abcd-1234"
+
+
+    beforeEach () ->
+      window =
+        addEventListener: jasmine.createSpy()
+
+    it '_initUserActivityPublishProcess should register listeners for important events', ->
+      logger = new Logger(apiHost, apiKey, {publishUserActive: true})
+
+      logger._initUserActivityPublishProcess(window)
+
+      expect(window.addEventListener).toHaveBeenCalledWith('mousemove', logger._userActivityOccurred, true)
+      expect(window.addEventListener).toHaveBeenCalledWith('keyup', logger._userActivityOccurred, true)
+
+
 
   describe 'Timing API helpers', ->
 
