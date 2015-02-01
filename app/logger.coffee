@@ -108,6 +108,9 @@ class weblogng.Logger
       events: []
       metrics: []
 
+
+    @userActivityCheckInterval = 60000
+
     @timeOfLastUserActivity = epochTimeInMilliseconds()
 
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
@@ -328,10 +331,27 @@ class weblogng.Logger
   _initUserActivityPublishProcess: (window = window) ->
     addListener(window, 'mousemove', @_userActivityOccurred)
     addListener(window, 'keyup', @_userActivityOccurred)
+    @_scheduleRecurringUserActivityPublish()
 
   _userActivityOccurred: () ->
     @timeOfLastUserActivity = epochTimeInMilliseconds()
     return
+
+  _scheduleRecurringUserActivityPublish: () ->
+
+    recordRecentUserActivity = () =>
+      _recordRecentUserActivity()
+
+    setInterval recordRecentUserActivity, @userActivityCheckInterval
+
+  _recordRecentUserActivity: () ->
+
+    now = epochTimeInMilliseconds()
+    tStartActivityInterval = now - @userActivityCheckInterval
+
+    if @timeOfLastUserActivity > tStartActivityInterval && @timeOfLastUserActivity <= now
+      @recordEvent('user-active', @timeOfLastUserActivity)
+
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"

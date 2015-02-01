@@ -571,7 +571,14 @@ define ['logger'], (logger) ->
       expect(window.addEventListener).toHaveBeenCalledWith('mousemove', logger._userActivityOccurred, true)
       expect(window.addEventListener).toHaveBeenCalledWith('keyup', logger._userActivityOccurred, true)
 
-    it '_userActivityOccurred should record when user activity occurs', ->
+    it '_initUserActivityPublishProcess should schedule a recurring activity check', ->
+      spyOn(logger, '_scheduleRecurringUserActivityPublish')
+
+      logger._initUserActivityPublishProcess(window)
+
+      expect(logger._scheduleRecurringUserActivityPublish).toHaveBeenCalled()
+
+    it '_userActivityOccurred should update timeOfLastUserActivity when user activity occurs', ->
       logger.timeOfLastUserActivity = undefined
 
       tBefore = epochTimeInMilliseconds()
@@ -583,6 +590,34 @@ define ['logger'], (logger) ->
       expect(logger.timeOfLastUserActivity).toBeGreaterThan(tBefore - 1)
       expect(logger.timeOfLastUserActivity).toBeLessThan(tAfter + 1)
 
+    it '_recordRecentUserActivity should record an user-active event when timeOfLastUserActivity occurs within activity check interval', ->
+
+      insideIntervalEnd = epochTimeInMilliseconds()
+      insideIntervalStart = insideIntervalEnd - logger.userActivityCheckInterval + 50
+      insideIntervalMidway = insideIntervalEnd - (logger.userActivityCheckInterval / 2)
+
+      spyOn(logger, 'recordEvent')
+
+      for timeOfLastUserActivity in [insideIntervalStart, insideIntervalMidway, insideIntervalEnd]
+        logger.timeOfLastUserActivity = timeOfLastUserActivity
+
+        logger._recordRecentUserActivity()
+
+        expect(logger.recordEvent).toHaveBeenCalledWith('user-active', timeOfLastUserActivity)
+
+    it '_recordRecentUserActivity should not record a user-active event when timeOfLastUserActivity occurs outside activity check interval', ->
+
+      outsideIntervalStart = epochTimeInMilliseconds() - logger.userActivityCheckInterval - 1
+      outsideIntervalEnd = epochTimeInMilliseconds() + 50
+
+      spyOn(logger, 'recordEvent')
+
+      for timeOfLastUserActivity in [outsideIntervalStart, outsideIntervalEnd]
+        logger.timeOfLastUserActivity = timeOfLastUserActivity
+
+        logger._recordRecentUserActivity()
+
+        expect(logger.recordEvent).not.toHaveBeenCalledWith('user-active', timeOfLastUserActivity)
 
   describe 'Timing API helpers', ->
 
