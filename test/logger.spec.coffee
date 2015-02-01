@@ -118,7 +118,7 @@ define ['logger'], (logger) ->
 
     it 'should generate unique identifiers with default length', ->
       ids = {}
-      iterations = 100000
+      iterations = 10000
 
       for num in [0..iterations]
         ids[generateUniqueId()] = num
