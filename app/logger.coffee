@@ -63,7 +63,7 @@ weblogng.addListener = (root, eventName, listener) ->
       root.attachEvent(eventName, listener, true)
 
 ###
-  WS is a simple abstraction wrapping the browser-provided WebSocket class
+  APIConnection is a simple abstraction wrapping browser-provided mechanisms for sending data to the WeblogNG api
 ###
 class weblogng.APIConnection
   constructor: (apiUrl) ->
@@ -318,15 +318,6 @@ class weblogng.Logger
       events: events
 
     return data
-
-  _scheduleReadyStateCheck: () ->
-
-    if "complete" == document.readyState
-      @_publishNavigationTimingData()
-    else
-      setTimeout(@_scheduleReadyStateCheck, 1000)
-
-    return
 
   _initUserActivityPublishProcess: (root = window) ->
     userActivityOccurred = =>
