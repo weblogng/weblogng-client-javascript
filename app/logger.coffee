@@ -328,9 +328,9 @@ class weblogng.Logger
 
     return
 
-  _initUserActivityPublishProcess: (window = window) ->
-    addListener(window, 'mousemove', @_userActivityOccurred)
-    addListener(window, 'keyup', @_userActivityOccurred)
+  _initUserActivityPublishProcess: (root = window) ->
+    addListener(root, 'mousemove', @_userActivityOccurred)
+    addListener(root, 'keyup', @_userActivityOccurred)
     @_scheduleRecurringUserActivityPublish()
 
   _userActivityOccurred: () ->
@@ -340,7 +340,7 @@ class weblogng.Logger
   _scheduleRecurringUserActivityPublish: () ->
 
     recordRecentUserActivity = () =>
-      _recordRecentUserActivity()
+      @_recordRecentUserActivity()
 
     setInterval recordRecentUserActivity, @userActivityCheckInterval
 
