@@ -568,8 +568,10 @@ define ['logger'], (logger) ->
     it '_initUserActivityPublishProcess should register listeners for important events', ->
       logger._initUserActivityPublishProcess(window)
 
-      expect(window.addEventListener).toHaveBeenCalledWith('mousemove', logger._userActivityOccurred, true)
-      expect(window.addEventListener).toHaveBeenCalledWith('keyup', logger._userActivityOccurred, true)
+      # would like to assert that _userActivityOccurred is provided as 2nd arg, but it needs to be
+      # wrapped in a Function so there is a dynamic layer of indirection
+      expect(window.addEventListener).toHaveBeenCalledWith('mousemove', jasmine.any(Function), true)
+      expect(window.addEventListener).toHaveBeenCalledWith('keyup', jasmine.any(Function), true)
 
     it '_initUserActivityPublishProcess should schedule a recurring activity check', ->
       spyOn(logger, '_scheduleRecurringUserActivityPublish')

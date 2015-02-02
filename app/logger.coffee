@@ -329,8 +329,11 @@ class weblogng.Logger
     return
 
   _initUserActivityPublishProcess: (root = window) ->
-    addListener(root, 'mousemove', @_userActivityOccurred)
-    addListener(root, 'keyup', @_userActivityOccurred)
+    userActivityOccurred = =>
+      @_userActivityOccurred()
+
+    addListener(root, 'mousemove', userActivityOccurred)
+    addListener(root, 'keyup', userActivityOccurred)
     @_scheduleRecurringUserActivityPublish()
 
   _userActivityOccurred: () ->
