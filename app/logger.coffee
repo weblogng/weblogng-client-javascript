@@ -1,7 +1,7 @@
 weblogng = this
 window?.weblogng = weblogng
 
-weblogng.generateUniqueId = (length = 8) ->
+weblogng.generateUniqueId = (length = 12) ->
   id = ""
   id += Math.random().toString(36).substr(2) while id.length < length
   id.substr 0, length
@@ -54,6 +54,14 @@ weblogng.toPageName = (location) ->
   else
     return "unknown-page"
 
+
+weblogng.addListener = (root, eventName, listener) ->
+  if root && eventName && listener
+    if root.addEventListener
+      root.addEventListener(eventName, listener, true)
+    else if root.attachEvent
+      root.attachEvent(eventName, listener, true)
+
 ###
   WS is a simple abstraction wrapping the browser-provided WebSocket class
 ###
@@ -88,6 +96,7 @@ class weblogng.Timer
 class weblogng.Logger
   constructor: (@apiHost, @apiKey, @options = {
     publishNavigationTimingMetrics: true
+    , publishUserActive: true
     , application: ""
   }) ->
     @id = generateUniqueId()
@@ -99,7 +108,13 @@ class weblogng.Logger
       events: []
       metrics: []
 
+
+    @userActivityCheckInterval = 60000
+
+    @timeOfLastUserActivity = epochTimeInMilliseconds()
+
     @publishNavigationTimingMetrics = @options && @options.publishNavigationTimingMetrics ? true : false
+    @publishUserActive = @options && @options.publishUserActive ? true : false
 
     if @options && @options.application
       @defaultContext.application = @options.application
@@ -108,6 +123,9 @@ class weblogng.Logger
 
     if @publishNavigationTimingMetrics and hasNavigationTimingAPI()
       @_initNavigationTimingPublishProcess()
+
+    if @publishUserActive
+      @_initUserActivityPublishProcess()
 
     _sendToAPI = =>
       @_sendToAPI()
@@ -309,6 +327,34 @@ class weblogng.Logger
       setTimeout(@_scheduleReadyStateCheck, 1000)
 
     return
+
+  _initUserActivityPublishProcess: (root = window) ->
+    userActivityOccurred = =>
+      @_userActivityOccurred()
+
+    addListener(root, 'mousemove', userActivityOccurred)
+    addListener(root, 'keyup', userActivityOccurred)
+    @_scheduleRecurringUserActivityPublish()
+
+  _userActivityOccurred: () ->
+    @timeOfLastUserActivity = epochTimeInMilliseconds()
+    return
+
+  _scheduleRecurringUserActivityPublish: () ->
+
+    recordRecentUserActivity = () =>
+      @_recordRecentUserActivity()
+
+    setInterval recordRecentUserActivity, @userActivityCheckInterval
+
+  _recordRecentUserActivity: () ->
+
+    now = epochTimeInMilliseconds()
+    tStartActivityInterval = now - @userActivityCheckInterval
+
+    if @timeOfLastUserActivity > tStartActivityInterval && @timeOfLastUserActivity <= now
+      @recordEvent('user-active', @timeOfLastUserActivity)
+
 
   toString: ->
     "[Logger id: #{@id}, apiHost: #{@apiHost}, apiKey: #{@apiKey} ]"

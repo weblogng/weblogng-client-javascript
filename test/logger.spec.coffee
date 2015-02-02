@@ -1,7 +1,7 @@
 randInt = (max = 10)->
   Math.floor((Math.random() * max) + 1)
 
-define ["logger"], (logger) ->
+define ['logger'], (logger) ->
 
   ###
     Create a mock WebSocket implementation to avoid browser-dependencies.
@@ -57,6 +57,9 @@ define ["logger"], (logger) ->
     it "hasNavigationTimingAPI should be defined", ->
       expect(hasNavigationTimingAPI).toBeDefined()
 
+    it "addListener should be defined", ->
+      expect(addListener).toBeDefined()
+
   describe "Verify main classes in WeblogNG client library exist", ->
     it "Logger should be defined", ->
       expect(Logger).toBeDefined()
@@ -67,6 +70,60 @@ define ["logger"], (logger) ->
 
     it "APIConnection should be defined", ->
       expect(APIConnection).toBeDefined()
+
+  describe "weblogng.addListener", ->
+
+    it 'should ignore bad inputs', ->
+      window =
+        addEventListener: jasmine.createSpy()
+      eventName = "event-#{generateUniqueId()}"
+      listener = () ->
+
+      addListener(undefined, undefined, undefined)
+      addListener(undefined, eventName, listener)
+      addListener(window, undefined, listener)
+      addListener(window, eventName, undefined)
+
+      expect(window.addEventListener).not.toHaveBeenCalled()
+
+    it 'should add listener to the window, preferring addEventListener', ->
+      # make the window with both common listener attachment methods so
+      # preference for addEventListener can be verified
+      window =
+        addEventListener: jasmine.createSpy()
+        attachEvent: jasmine.createSpy()
+
+      eventName = "event-#{generateUniqueId()}"
+      listener = () ->
+
+      expect(window.addEventListener).toBeDefined()
+
+      addListener(window, eventName, listener)
+
+      expect(window.addEventListener).toHaveBeenCalledWith(eventName, listener, true)
+      expect(window.attachEvent).not.toHaveBeenCalled()
+
+    it 'should add listener to the window via attachEvent, when addEventListener is undefined', ->
+      eventName = "event-#{generateUniqueId()}"
+      listener = () ->
+
+      window =
+        attachEvent: jasmine.createSpy()
+
+      addListener(window, eventName, listener)
+
+      expect(window.attachEvent).toHaveBeenCalledWith(eventName, listener, true)
+
+  describe 'weblogng.generateUniqueId', ->
+
+    it 'should generate unique identifiers with default length', ->
+      ids = {}
+      iterations = 10000
+
+      for num in [0..iterations]
+        ids[generateUniqueId()] = num
+
+      expect(Object.keys(ids).length).toBeGreaterThan(iterations - 1)
 
   describe 'Logger', ->
     apiHost = "localhost:9000"
@@ -94,6 +151,7 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey)
 
       expect(logger.publishNavigationTimingMetrics).toBeTruthy()
+      expect(logger.publishUserActive).toBeTruthy()
       expect(logger.defaultContext.application).toBeUndefined()
 
     it 'should use publishNavigationTimingMetrics option when specified', ->
@@ -104,6 +162,15 @@ define ["logger"], (logger) ->
       logger = new Logger(apiHost, apiKey, {publishNavigationTimingMetrics: false})
 
       expect(logger.publishNavigationTimingMetrics).toBeFalsy()
+
+    it 'should use publishUserActive option when specified', ->
+      logger = new Logger(apiHost, apiKey, {publishUserActive: true})
+
+      expect(logger.publishUserActive).toBeTruthy()
+
+      logger = new Logger(apiHost, apiKey, {publishUserActive: false})
+
+      expect(logger.publishUserActive).toBeFalsy()
 
     it 'should retain optional application name as part of default context, when specified', ->
       application = "unit-test"
@@ -485,6 +552,74 @@ define ["logger"], (logger) ->
       expect(navTimingData[pageName + '-response_recv_time']).toBeUndefined()
       expect(navTimingData[pageName + '-first_byte_time']).toBeUndefined()
 
+  describe 'Logger user activity support', ->
+    window = null
+    logger = null
+    apiHost = "localhost:9000"
+    apiKey = "abcd-1234"
+
+
+    beforeEach () ->
+      window =
+        addEventListener: jasmine.createSpy()
+
+      logger = new Logger(apiHost, apiKey, {publishUserActive: true})
+
+    it '_initUserActivityPublishProcess should register listeners for important events', ->
+      logger._initUserActivityPublishProcess(window)
+
+      # would like to assert that _userActivityOccurred is provided as 2nd arg, but it needs to be
+      # wrapped in a Function so there is a dynamic layer of indirection
+      expect(window.addEventListener).toHaveBeenCalledWith('mousemove', jasmine.any(Function), true)
+      expect(window.addEventListener).toHaveBeenCalledWith('keyup', jasmine.any(Function), true)
+
+    it '_initUserActivityPublishProcess should schedule a recurring activity check', ->
+      spyOn(logger, '_scheduleRecurringUserActivityPublish')
+
+      logger._initUserActivityPublishProcess(window)
+
+      expect(logger._scheduleRecurringUserActivityPublish).toHaveBeenCalled()
+
+    it '_userActivityOccurred should update timeOfLastUserActivity when user activity occurs', ->
+      logger.timeOfLastUserActivity = undefined
+
+      tBefore = epochTimeInMilliseconds()
+
+      logger._userActivityOccurred()
+
+      tAfter = epochTimeInMilliseconds()
+
+      expect(logger.timeOfLastUserActivity).toBeGreaterThan(tBefore - 1)
+      expect(logger.timeOfLastUserActivity).toBeLessThan(tAfter + 1)
+
+    it '_recordRecentUserActivity should record an user-active event when timeOfLastUserActivity occurs within activity check interval', ->
+
+      insideIntervalEnd = epochTimeInMilliseconds()
+      insideIntervalStart = insideIntervalEnd - logger.userActivityCheckInterval + 50
+      insideIntervalMidway = insideIntervalEnd - (logger.userActivityCheckInterval / 2)
+
+      spyOn(logger, 'recordEvent')
+
+      for timeOfLastUserActivity in [insideIntervalStart, insideIntervalMidway, insideIntervalEnd]
+        logger.timeOfLastUserActivity = timeOfLastUserActivity
+
+        logger._recordRecentUserActivity()
+
+        expect(logger.recordEvent).toHaveBeenCalledWith('user-active', timeOfLastUserActivity)
+
+    it '_recordRecentUserActivity should not record a user-active event when timeOfLastUserActivity occurs outside activity check interval', ->
+
+      outsideIntervalStart = epochTimeInMilliseconds() - logger.userActivityCheckInterval - 1
+      outsideIntervalEnd = epochTimeInMilliseconds() + 50
+
+      spyOn(logger, 'recordEvent')
+
+      for timeOfLastUserActivity in [outsideIntervalStart, outsideIntervalEnd]
+        logger.timeOfLastUserActivity = timeOfLastUserActivity
+
+        logger._recordRecentUserActivity()
+
+        expect(logger.recordEvent).not.toHaveBeenCalledWith('user-active', timeOfLastUserActivity)
 
   describe 'Timing API helpers', ->
 
