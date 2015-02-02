@@ -102,7 +102,7 @@ class weblogng.Logger
     @id = generateUniqueId()
     @apiUrl = "https://#{apiHost}/v2/log"
     @defaultContext = {}
-    @webSocket = @_createWebSocket(@apiUrl)
+    @apiConnection = @_createAPIConnection(@apiUrl)
     @timers = {}
     @buffers =
       events: []
@@ -154,7 +154,7 @@ class weblogng.Logger
     @buffers.events = []
     @buffers.metrics = []
 
-    @webSocket.send(@_createLogMessage(events, metrics))
+    @apiConnection.send(@_createLogMessage(events, metrics))
 
 
   _triggerSendToAPI: () ->
@@ -164,7 +164,7 @@ class weblogng.Logger
     @buffers.metrics.push(@makeMetric(metricName, metricValue, timestamp))
     @_triggerSendToAPI()
 
-  _createWebSocket: (apiUrl) ->
+  _createAPIConnection: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)
 
   _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
@@ -276,7 +276,7 @@ class weblogng.Logger
   _publishNavigationTimingData: () ->
     timingData = @_generateNavigationTimingData()
     logMessage = @_createLogMessage(timingData.events, timingData.metrics)
-    @webSocket.send(logMessage)
+    @apiConnection.send(logMessage)
 
     return
 

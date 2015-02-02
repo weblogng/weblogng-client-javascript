@@ -18,7 +18,7 @@ define ['logger'], (logger) ->
   #  replace _createWebSocket method on Logger prototype so that we use a mock WebSocket impl
   #  instead of the real impl.
   ####
-  Logger::_createWebSocket = (apiUrl) ->
+  Logger::_createAPIConnection = (apiUrl) ->
     return new MockWS(apiUrl)
 
   makeMetric = () ->
@@ -218,7 +218,7 @@ define ['logger'], (logger) ->
         expect(metric.unit).toBe("ms")
 
     it 'sendMetric should store metrics in buffer and trigger a send via the apiConnection', ->
-      spyOn(logger.webSocket, 'send')
+      spyOn(logger.apiConnection, 'send')
       spyOn(logger, '_createMetricMessage')
       spyOn(logger, '_createLogMessage')
       spyOn(logger, '_triggerSendToAPI')
@@ -233,7 +233,7 @@ define ['logger'], (logger) ->
 
       expect(logger._createMetricMessage).not.toHaveBeenCalled()
       expect(logger._createLogMessage).not.toHaveBeenCalled()
-      expect(logger.webSocket.send).not.toHaveBeenCalled()
+      expect(logger.apiConnection.send).not.toHaveBeenCalled()
 
       expect(logger.buffers.events).toEqual([])
       expect(logger.buffers.metrics).toEqual([logger.makeMetric(metricName, metricValue, timestamp)])
@@ -484,14 +484,14 @@ define ['logger'], (logger) ->
         ]
 
       spyOn(logger, '_generateNavigationTimingData').andReturn(mockData)
-      spyOn(logger.webSocket, 'send')
+      spyOn(logger.apiConnection, 'send')
 
       logger._publishNavigationTimingData()
 
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
       expect(logger._generateNavigationTimingData).toHaveBeenCalled()
-      expect(logger.webSocket.send).toHaveBeenCalledWith(logger._createLogMessage(mockData.events, mockData.metrics))
+      expect(logger.apiConnection.send).toHaveBeenCalledWith(logger._createLogMessage(mockData.events, mockData.metrics))
 
     it '_generateNavigationTimingData should generate metrics using performance object', ->
       timing =
