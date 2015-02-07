@@ -104,8 +104,13 @@ module.exports = function (grunt) {
         files: ['test/**/*.coffee'],
         tasks: ['default']
       }
-    }
+    },
 
+    release: {
+      options: {
+        additionalFiles: ['bower.json']
+      }
+    }
   });
 
   // These plugins provide necessary tasks.
