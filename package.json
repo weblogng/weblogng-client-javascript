@@ -1,7 +1,17 @@
 {
   "name": "weblogng-logger",
-  "description": "WeblogNG Client Library",
+  "description": "The WeblogNG client library is used to log measurements and events from a web application frontend so that real-world data can be analyzed in an application dashboard.",
   "version": "0.6.1-dev",
+  "keywords": [
+    "WeblogNG",
+    "logger",
+    "logging",
+    "performance",
+    "monitoring",
+    "dashboard"
+  ],
+  "homepage": "https://github.com/weblogng/weblogng-client-javascript",
+  "main": "release/logger.js",
   "engines": {
     "node": ">= 0.10.0"
   },
@@ -20,9 +30,10 @@
     }
   ],
   "repository": {
-    "type" : "git"
-    , "url" : "git@github.com:weblogng/weblogng-client-javascript.git"
+    "type": "git",
+    "url": "git@github.com:weblogng/weblogng-client-javascript.git"
   },
+  "dependencies": {},
   "devDependencies": {
     "grunt-contrib-coffee": "0.12.0",
     "grunt-contrib-copy": "0.7.0",
@@ -41,6 +52,7 @@
     "grunt-karma": "0.10.1",
     "karma-coverage": "0.1.5",
     "bower": "1.3.12",
-    "grunt-bower-requirejs": "2.0.0"
+    "grunt-bower-requirejs": "2.0.0",
+    "grunt-release": "0.11.0"
   }
 }

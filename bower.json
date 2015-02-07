@@ -1,6 +1,17 @@
 {
-  "name": "logger",
-  "dependencies": {
+  "name": "weblogng-logger",
+  "version": "0.6.1-dev",
+  "keywords": [
+    "WeblogNG",
+    "logger",
+    "logging",
+    "performance",
+    "monitoring",
+    "dashboard"
+  ],
+  "main": "release/logger.js",
+  "dependencies": {},
+  "devDependencies": {
     "requirejs": "~2.1.5",
     "jasmine": "~1.3.1"
   }
