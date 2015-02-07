@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/weblogng/weblogng-client-javascript.svg?branch=master)](https://travis-ci.org/weblogng/weblogng-client-javascript)
+
 # Overview #
 
 The WeblogNG Javascript Client library is used by web applications to record and report events and measurements
@@ -8,6 +10,7 @@ made in the client back to the WeblogNG api for collection.
 Documentation for using the Javascript Client library as well as other clients is available at http://docs.weblogng.com
 
 # Building #
+
 
 The library can be built and tested by following the steps below.
 
