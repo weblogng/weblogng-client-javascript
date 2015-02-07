@@ -50,6 +50,18 @@ module.exports = function (grunt) {
             dest: 'dist/test/test-main.js'
           }
         ]
+      },
+      prerelease: {
+        files: [
+          {
+            nonull: true,
+            expand: true,
+            filter: 'isFile',
+            flatten: true,
+            src: ['dist/app/**'],
+            dest: 'release/'
+          }
+        ]
       }
     },
 
@@ -134,4 +146,6 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('test', ['karma:continuous']);
+
+  grunt.registerTask('prerelease', ['default', 'copy:prerelease']);
 };
