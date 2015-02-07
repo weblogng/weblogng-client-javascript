@@ -592,7 +592,7 @@ define ['logger'], (logger) ->
       expect(logger.timeOfLastUserActivity).toBeGreaterThan(tBefore - 1)
       expect(logger.timeOfLastUserActivity).toBeLessThan(tAfter + 1)
 
-    it '_recordRecentUserActivity should record an user-active event when timeOfLastUserActivity occurs within activity check interval', ->
+    it '_recordRecentUserActivity should record an user_active event when timeOfLastUserActivity occurs within activity check interval', ->
 
       insideIntervalEnd = epochTimeInMilliseconds()
       insideIntervalStart = insideIntervalEnd - logger.userActivityCheckInterval + 50
@@ -605,9 +605,9 @@ define ['logger'], (logger) ->
 
         logger._recordRecentUserActivity()
 
-        expect(logger.recordEvent).toHaveBeenCalledWith('user-active', timeOfLastUserActivity)
+        expect(logger.recordEvent).toHaveBeenCalledWith('user_active', timeOfLastUserActivity)
 
-    it '_recordRecentUserActivity should not record a user-active event when timeOfLastUserActivity occurs outside activity check interval', ->
+    it '_recordRecentUserActivity should not record a user_active event when timeOfLastUserActivity occurs outside activity check interval', ->
 
       outsideIntervalStart = epochTimeInMilliseconds() - logger.userActivityCheckInterval - 1
       outsideIntervalEnd = epochTimeInMilliseconds() + 50
@@ -619,7 +619,7 @@ define ['logger'], (logger) ->
 
         logger._recordRecentUserActivity()
 
-        expect(logger.recordEvent).not.toHaveBeenCalledWith('user-active', timeOfLastUserActivity)
+        expect(logger.recordEvent).not.toHaveBeenCalledWith('user_active', timeOfLastUserActivity)
 
   describe 'Timing API helpers', ->
 

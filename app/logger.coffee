@@ -344,7 +344,7 @@ class weblogng.Logger
     tStartActivityInterval = now - @userActivityCheckInterval
 
     if @timeOfLastUserActivity > tStartActivityInterval && @timeOfLastUserActivity <= now
-      @recordEvent('user-active', @timeOfLastUserActivity)
+      @recordEvent('user_active', @timeOfLastUserActivity)
 
 
   toString: ->
