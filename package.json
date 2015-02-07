@@ -1,7 +1,16 @@
 {
   "name": "weblogng-logger",
-  "description": "WeblogNG Client Library",
+  "description": "The WeblogNG client library is used to log measurements and events from a web application frontend so that real-world data can be analyzed in an application dashboard.",
   "version": "0.6.1-dev",
+  "keywords": [
+    "WeblogNG",
+    "logger",
+    "logging",
+    "performance",
+    "monitoring",
+    "dashboard"
+  ],
+  "main": "release/logger.js",
   "engines": {
     "node": ">= 0.10.0"
   },

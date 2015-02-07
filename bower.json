@@ -9,6 +9,7 @@
     "monitoring",
     "dashboard"
   ],
+  "main": "release/logger.js",
   "devDependencies": {
     "requirejs": "~2.1.5",
     "jasmine": "~1.3.1"
