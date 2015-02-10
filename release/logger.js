@@ -54,6 +54,20 @@
     return window.performance || window.mozPerformance || window.msPerformance || window.webkitPerformance;
   };
 
+  weblogng.locateNavigatorObject = function() {
+    return navigator;
+  };
+
+  weblogng.getUserAgent = function() {
+    var navigator;
+    navigator = locateNavigatorObject();
+    if (navigator && navigator.userAgent) {
+      return navigator.userAgent;
+    } else {
+      return void 0;
+    }
+  };
+
   weblogng.hasNavigationTimingAPI = function() {
     var _ref;
     if ((_ref = locatePerformanceObject()) != null ? _ref.timing : void 0) {
@@ -250,7 +264,7 @@
     };
 
     Logger.prototype._createLogMessage = function(events, metrics) {
-      var context, event, message, metric, _i, _j, _len, _len1;
+      var context, event, message, metric, userAgent, _i, _j, _len, _len1;
       if (events == null) {
         events = [];
       }
@@ -268,6 +282,10 @@
       context = {};
       if (this.options.application) {
         context.application = this.options.application;
+      }
+      userAgent = getUserAgent();
+      if (userAgent) {
+        context.userAgent = userAgent;
       }
       message = {
         "apiAccessKey": this.apiKey,
