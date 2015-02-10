@@ -31,6 +31,16 @@ weblogng.epochTimeInSeconds = () ->
 weblogng.locatePerformanceObject = () ->
   return window.performance || window.mozPerformance || window.msPerformance || window.webkitPerformance
 
+weblogng.locateNavigatorObject = () ->
+  return navigator
+
+weblogng.getUserAgent = () ->
+  navigator = locateNavigatorObject()
+  if navigator and navigator.userAgent
+    return navigator.userAgent
+  else
+    return undefined
+
 weblogng.hasNavigationTimingAPI = () ->
   if locatePerformanceObject()?.timing
     return true
@@ -194,6 +204,10 @@ class weblogng.Logger
 
     if @options.application
       context.application = @options.application
+
+    userAgent = getUserAgent()
+    if userAgent
+      context.userAgent = userAgent
 
     message =
       "apiAccessKey": @apiKey,

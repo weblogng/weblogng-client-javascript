@@ -185,7 +185,7 @@ define ['logger'], (logger) ->
       expect(s).toContain(logger.apiHost)
       expect(s).toContain(logger.apiKey)
 
-    it 'should build secure loggin api urls', ->
+    it 'should build secure logging api urls', ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
     it 'should make events using the provided data', ->
@@ -299,7 +299,7 @@ define ['logger'], (logger) ->
 
         expectedLogMessage =
           "apiAccessKey": apiKey,
-          "context": {},
+          "context": { userAgent : navigator.userAgent},
           "events": events,
           "metrics": metrics
 
@@ -310,6 +310,7 @@ define ['logger'], (logger) ->
     it 'should include default context in log message', ->
       options =
         "application" : "App Name - #{randInt()}"
+
       logger = new Logger(apiHost, apiKey, options)
 
       for num in [1..10]
@@ -320,6 +321,7 @@ define ['logger'], (logger) ->
 
         expectedContext =
           "application": options.application
+          "userAgent" : navigator.userAgent
 
         expect(message.context).toEqual(expectedContext)
 
@@ -672,6 +674,37 @@ define ['logger'], (logger) ->
       expect(window.performance).toBeUndefined()
       expect(locatePerformanceObject()).toBe(performanceObject)
       expect(hasNavigationTimingAPI()).toBeTruthy()
+
+  describe 'Navigator helpers', ->
+
+    beforeEach () ->
+      window.navigator = undefined
+
+    it 'locateNavigatorObject should return undefined when navigator object is not present', ->
+
+      expect(window.navigator).toBeUndefined()
+      expect(locateNavigatorObject()).toBeUndefined()
+      expect(getUserAgent()).toBeUndefined()
+
+    it 'locateNavigatorObject should return navigator when navigator object is defined, but userAgent is not', ->
+
+      navigatorObject = {}
+
+      window.navigator = navigatorObject
+
+      expect(locateNavigatorObject()).toBe(navigatorObject)
+      expect(getUserAgent()).toBeUndefined()
+
+    it 'locateNavigatorObject should return navigator object', ->
+
+      userAgent = "User Agent / #{randInt()}"
+      navigatorObject =
+        userAgent: userAgent
+
+      window.navigator = navigatorObject
+
+      expect(locateNavigatorObject()).toBe(navigatorObject)
+      expect(getUserAgent()).toBe(userAgent)
 
   describe 'APIConnection', ->
     it 'APIConnection be defined', ->
