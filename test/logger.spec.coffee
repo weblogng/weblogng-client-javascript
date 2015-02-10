@@ -677,6 +677,25 @@ define ['logger'], (logger) ->
       expect(locatePerformanceObject()).toBe(performanceObject)
       expect(hasNavigationTimingAPI()).toBeTruthy()
 
+  describe 'Navigator helpers', ->
+
+    beforeEach () ->
+      window.navigator = undefined
+
+    it 'locateNavigatorObject should return undefined when navigator object is not present', ->
+
+      expect(window.navigator).toBeUndefined()
+      expect(locateNavigatorObject()).toBeUndefined()
+
+    it 'hasNavigationTimingAPI should return false when performance object is defined, but timing is not', ->
+
+      navigatorObject =
+        userAgent: "User Agent / #{randInt()}"
+
+      window.navigator = navigatorObject
+
+      expect(locateNavigatorObject()).toBe(navigatorObject)
+
   describe 'APIConnection', ->
     it 'APIConnection be defined', ->
       expect(APIConnection).toBeDefined()
