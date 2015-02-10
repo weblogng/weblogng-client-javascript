@@ -312,7 +312,6 @@ define ['logger'], (logger) ->
         "application" : "App Name - #{randInt()}"
 
       logger = new Logger(apiHost, apiKey, options)
-      spyOn(logger, '_getUserAgent').andReturn(navigator.userAgent)
 
       for num in [1..10]
         metrics = makeMetrics(randInt())
@@ -325,7 +324,6 @@ define ['logger'], (logger) ->
           "userAgent" : navigator.userAgent
 
         expect(message.context).toEqual(expectedContext)
-        expect(logger._getUserAgent).toHaveBeenCalled()
 
     it 'should sanitize metric names', ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
@@ -686,15 +684,27 @@ define ['logger'], (logger) ->
 
       expect(window.navigator).toBeUndefined()
       expect(locateNavigatorObject()).toBeUndefined()
+      expect(getUserAgent()).toBeUndefined()
 
-    it 'hasNavigationTimingAPI should return false when performance object is defined, but timing is not', ->
+    it 'locateNavigatorObject should return navigator when navigator object is defined, but userAgent is not', ->
 
-      navigatorObject =
-        userAgent: "User Agent / #{randInt()}"
+      navigatorObject = {}
 
       window.navigator = navigatorObject
 
       expect(locateNavigatorObject()).toBe(navigatorObject)
+      expect(getUserAgent()).toBeUndefined()
+
+    it 'locateNavigatorObject should return navigator object', ->
+
+      userAgent = "User Agent / #{randInt()}"
+      navigatorObject =
+        userAgent: userAgent
+
+      window.navigator = navigatorObject
+
+      expect(locateNavigatorObject()).toBe(navigatorObject)
+      expect(getUserAgent()).toBe(userAgent)
 
   describe 'APIConnection', ->
     it 'APIConnection be defined', ->

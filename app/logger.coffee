@@ -34,6 +34,13 @@ weblogng.locatePerformanceObject = () ->
 weblogng.locateNavigatorObject = () ->
   return navigator
 
+weblogng.getUserAgent = () ->
+  navigator = locateNavigatorObject()
+  if navigator and navigator.userAgent
+    return navigator.userAgent
+  else
+    return undefined
+
 weblogng.hasNavigationTimingAPI = () ->
   if locatePerformanceObject()?.timing
     return true
@@ -198,7 +205,7 @@ class weblogng.Logger
     if @options.application
       context.application = @options.application
 
-    userAgent = @_getUserAgent()
+    userAgent = getUserAgent()
     if userAgent
       context.userAgent = userAgent
 
@@ -209,13 +216,6 @@ class weblogng.Logger
       "metrics": metrics
 
     return message
-
-  _getUserAgent: () ->
-    navigator = locateNavigatorObject()
-    if navigator and navigator.userAgent
-      return navigator.userAgent
-    else
-      return undefined
 
   _sanitizeMetricName: (metricName) ->
     metricName.replace /[^\w\d_-]/g, '_'
