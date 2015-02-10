@@ -185,7 +185,7 @@ define ['logger'], (logger) ->
       expect(s).toContain(logger.apiHost)
       expect(s).toContain(logger.apiKey)
 
-    it 'should build secure loggin api urls', ->
+    it 'should build secure logging api urls', ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
     it 'should make events using the provided data', ->
@@ -299,7 +299,7 @@ define ['logger'], (logger) ->
 
         expectedLogMessage =
           "apiAccessKey": apiKey,
-          "context": {},
+          "context": { userAgent : navigator.userAgent},
           "events": events,
           "metrics": metrics
 
@@ -310,7 +310,9 @@ define ['logger'], (logger) ->
     it 'should include default context in log message', ->
       options =
         "application" : "App Name - #{randInt()}"
+
       logger = new Logger(apiHost, apiKey, options)
+      spyOn(logger, '_getUserAgent').andReturn(navigator.userAgent)
 
       for num in [1..10]
         metrics = makeMetrics(randInt())
@@ -320,8 +322,10 @@ define ['logger'], (logger) ->
 
         expectedContext =
           "application": options.application
+          "userAgent" : navigator.userAgent
 
         expect(message.context).toEqual(expectedContext)
+        expect(logger._getUserAgent).toHaveBeenCalled()
 
     it 'should sanitize metric names', ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
