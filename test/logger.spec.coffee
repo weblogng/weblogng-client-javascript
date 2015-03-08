@@ -21,12 +21,21 @@ define ['logger'], (logger) ->
   Logger::_createAPIConnection = (apiUrl) ->
     return new MockWS(apiUrl)
 
+  makeRandomString = (base, index = 10) ->
+    randModValue = randInt(5)
+    if (index % randModValue == 0)
+      return undefined
+    else
+      return "#{base}_#{index}-#{generateUniqueId()}"
+
   makeMetric = () ->
     metric = {}
     metric.name = "metric_name_" + randInt(25)
     metric.value = Math.random() * 100
     metric.unit = "ms"
     metric.timestamp = epochTimeInMilliseconds()
+    metric.scope = makeRandomString("scope")
+    metric.category = makeRandomString("category")
 
     return metric
 
@@ -188,38 +197,77 @@ define ['logger'], (logger) ->
     it 'should build secure logging api urls', ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
+    it 'should make events using the minimal-required data', ->
+      logger = new Logger(apiHost, apiKey)
+
+      name = "event_name_" + randInt(1000)
+      event = logger.makeEvent(name)
+
+      expect(event.name).toBe(name)
+      expect(event.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
+      expect(event.scope).toBe(Scope.APPLICATION)
+      expect(event.category).toBeUndefined()
+
     it 'should make events using the provided data', ->
-      application = "application-"
+      application = "application"
       logger = new Logger(apiHost, apiKey, {application: application})
 
-      for num in [1..25]
+      for num in [1..50]
         eventName = "event_name_#{num}_" + randInt(1000)
         timestamp = epochTimeInMilliseconds()
+        scope = makeRandomString("scope", num)
+        category = makeRandomString("category", num)
 
-        event = logger.makeEvent(eventName, timestamp)
+        event = logger.makeEvent(eventName, timestamp, scope, category)
 
         expect(event.name).toBe(eventName)
         expect(event.timestamp).toBe(timestamp)
 
+        if scope
+          expect(event.scope).toBe(scope)
+        else
+          expect(event.scope).toBe(Scope.APPLICATION)
+
+        expect(event.category).toBe(category)
+
+    it 'should make metrics using the minimal-required data', ->
+      logger = new Logger(apiHost, apiKey)
+
+      name = "metric_name_" + randInt(1000)
+      metric = logger.makeMetric(name, randInt(1000))
+
+      expect(metric.name).toBe(name)
+      expect(metric.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
+      expect(metric.scope).toBe(Scope.APPLICATION)
+      expect(metric.category).toBeUndefined()
+
     it 'should make metrics using the provided data', ->
-      application = "application-"
+      application = makeRandomString("application")
       logger = new Logger(apiHost, apiKey, {application: application})
 
-      for num in [1..25]
+      for num in [1..50]
         metricName = "metric_name_#{num}_" + randInt(1000)
         metricValue = Math.random()
         timestamp = epochTimeInMilliseconds()
+        scope = makeRandomString("scope", num)
+        category = makeRandomString("category", num)
 
-        metric = logger.makeMetric(metricName, metricValue, timestamp)
+        metric = logger.makeMetric(metricName, metricValue, timestamp, scope, category)
 
         expect(metric.name).toBe(metricName)
+
+        if scope
+          expect(metric.scope).toBe(scope)
+        else
+          expect(metric.scope).toBe(Scope.APPLICATION)
+
+        expect(metric.category).toBe(category)
         expect(metric.value).toBe(metricValue)
         expect(metric.timestamp).toBe(timestamp)
         expect(metric.unit).toBe("ms")
 
     it 'sendMetric should store metrics in buffer and trigger a send via the apiConnection', ->
       spyOn(logger.apiConnection, 'send')
-      spyOn(logger, '_createMetricMessage')
       spyOn(logger, '_createLogMessage')
       spyOn(logger, '_triggerSendToAPI')
 
@@ -231,60 +279,11 @@ define ['logger'], (logger) ->
 
       expect(logger._triggerSendToAPI).toHaveBeenCalled()
 
-      expect(logger._createMetricMessage).not.toHaveBeenCalled()
       expect(logger._createLogMessage).not.toHaveBeenCalled()
       expect(logger.apiConnection.send).not.toHaveBeenCalled()
 
       expect(logger.buffers.events).toEqual([])
       expect(logger.buffers.metrics).toEqual([logger.makeMetric(metricName, metricValue, timestamp)])
-
-    it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
-      for num in [1..100]
-        metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
-        metricValue = Math.random()
-        timestamp = epochTimeInMilliseconds()
-        truncatedTimestamp = Math.floor(timestamp / 10)
-
-        message = logger._createMetricMessage(metricName, metricValue)
-
-        actualTimestamp = message.metrics[0].timestamp
-        actualTruncatedTimestamp = Math.floor(actualTimestamp / 10)
-        expect(actualTruncatedTimestamp).toBe(truncatedTimestamp)
-
-        expectedLogMessage =
-          "apiAccessKey": apiKey,
-          "context": {},
-          "metrics": [
-            {
-              "name": metricName,
-              "value": metricValue,
-              "unit": "ms",
-              "timestamp": actualTimestamp
-            }
-          ]
-
-        expect(message).toEqual(expectedLogMessage)
-
-    it 'should create a metric message using provided name and value time, when provided', ->
-      metricName = "metric_name"
-      metricValue = 42
-      timestamp = 1362714242000
-
-      expectedLogMessage =
-        "apiAccessKey": apiKey,
-        "context": {},
-        "metrics": [
-          {
-            "name": metricName,
-            "value": metricValue,
-            "unit": "ms",
-            "timestamp": timestamp
-          }
-        ]
-
-      message = logger._createMetricMessage(metricName, metricValue, timestamp)
-
-      expect(message).toEqual(expectedLogMessage)
 
     it 'should create a log message using provided events and metrics', ->
 
@@ -329,13 +328,6 @@ define ['logger'], (logger) ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
       for forbiddenChar in forbiddenChars
         expect(logger._sanitizeMetricName("metric-name_1#{forbiddenChar}2")).toBe("metric-name_1_2")
-
-    it 'should sanitize metric names when sending a metric', ->
-      spyOn(logger, '_sanitizeMetricName')
-
-      logger._createMetricMessage("metric name", 42)
-
-      expect(logger._sanitizeMetricName).toHaveBeenCalled()
 
     it 'should record the current time when recordStart is called for a given metric name', ->
       metricName = 'save'
@@ -510,6 +502,8 @@ define ['logger'], (logger) ->
       pageName = 'some'
       spyOn(weblogng, 'toPageName').andReturn(pageName);
 
+      category = weblogng.Category.NAVIGATION_TIMING
+
       navTimingData = logger._generateNavigationTimingData()
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
@@ -521,13 +515,13 @@ define ['logger'], (logger) ->
 
       actualTimestamp = metrics[0].timestamp
 
-      expect(metrics[0]).toEqual(logger.makeMetric(pageName + '-dns_lookup_time', 150, actualTimestamp))
-      expect(metrics[1]).toEqual(logger.makeMetric(pageName + '-first_byte_time', 250, actualTimestamp))
-      expect(metrics[2]).toEqual(logger.makeMetric(pageName + '-response_recv_time', 200, actualTimestamp))
-      expect(metrics[3]).toEqual(logger.makeMetric(pageName + '-page_load_time', 1000, actualTimestamp))
+      expect(metrics[0]).toEqual(logger.makeMetric('dns_lookup_time', 150, actualTimestamp, pageName, category))
+      expect(metrics[1]).toEqual(logger.makeMetric('first_byte_time', 250, actualTimestamp, pageName, category))
+      expect(metrics[2]).toEqual(logger.makeMetric('response_recv_time', 200, actualTimestamp, pageName, category))
+      expect(metrics[3]).toEqual(logger.makeMetric('page_load_time', 1000, actualTimestamp, pageName, category))
 
       events = navTimingData.events
-      expect(events[0]).toEqual(logger.makeEvent(pageName + '-page_load', actualTimestamp))
+      expect(events[0]).toEqual(logger.makeEvent('page_load', actualTimestamp, pageName, category))
 
     it '_generateNavigationTimingData should only generate metrics for events that have occurred', ->
       T_HAS_NOT_OCCURRED = 0
@@ -549,10 +543,8 @@ define ['logger'], (logger) ->
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
-      expect(navTimingData[pageName + '-dns_lookup_time']).toBeUndefined()
-      expect(navTimingData[pageName + '-page_load_time']).toBeUndefined()
-      expect(navTimingData[pageName + '-response_recv_time']).toBeUndefined()
-      expect(navTimingData[pageName + '-first_byte_time']).toBeUndefined()
+      expect(navTimingData.events).toEqual([])
+      expect(navTimingData.metrics).toEqual([])
 
   describe 'Logger user activity support', ->
     window = null

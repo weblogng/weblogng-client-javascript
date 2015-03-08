@@ -103,7 +103,16 @@ class weblogng.Timer
   getElapsedTime: () ->
     return @tFinish - @tStart
 
+class weblogng.Scope
+
+  @APPLICATION: 'application'
+
+class weblogng.Category
+
+  @NAVIGATION_TIMING: 'navigation timing'
+
 class weblogng.Logger
+
   constructor: (@apiHost, @apiKey, @options = {
     publishNavigationTimingMetrics: true
     , publishUserActive: true
@@ -142,21 +151,32 @@ class weblogng.Logger
 
     @_throttledSendToAPI = weblogng.throttle(_sendToAPI, 5000)
 
+  _addAttributesToLogItem: (obj, scope, category) ->
+    if scope
+      obj.scope = scope
 
-  makeEvent: (name, timestamp = epochTimeInMilliseconds()) ->
-    return {
-    "name": name
-      , "scope": "application"
+    if category
+      obj.category = category
+
+    return obj
+
+  makeEvent: (name, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
+    event = {
+      "name": name
       , "timestamp": timestamp
     }
 
-  makeMetric: (name, value, timestamp = epochTimeInMilliseconds()) ->
-    return {
-    "name": name
+    return @_addAttributesToLogItem(event, scope, category)
+
+  makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
+    metric = {
+      "name": name
       , "value": value
       , "unit": "ms"
       , "timestamp": timestamp
     }
+
+    return @_addAttributesToLogItem(metric, scope, category)
 
   _sendToAPI: () ->
     events = @buffers.events
@@ -176,22 +196,6 @@ class weblogng.Logger
 
   _createAPIConnection: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)
-
-  _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
-    sanitizedMetricName = @_sanitizeMetricName(metricName)
-    message =
-      "apiAccessKey": @apiKey,
-      "context": {},
-      "metrics": [
-        {
-          "name": sanitizedMetricName,
-          "value": metricValue,
-          "unit": "ms",
-          "timestamp": timestamp
-        }
-      ]
-
-    return message
 
   _createLogMessage: (events = [], metrics = []) ->
     for event in events
@@ -296,36 +300,45 @@ class weblogng.Logger
 
   _generateNavigationTimingData: () ->
     performance = locatePerformanceObject()
-    baseMetricName = toPageName(location)
+    scope = toPageName(location)
+    category = weblogng.Category.NAVIGATION_TIMING
     timestamp = epochTimeInMilliseconds()
 
     events = []
     metrics = []
 
     if performance.timing.dnsLookupStart > 0 and performance.timing.dnsLookupEnd > 0
-      metric = @makeMetric((baseMetricName + "-dns_lookup_time"),
+      metric = @makeMetric("dns_lookup_time",
         (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
 
     if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
-      metric = @makeMetric((baseMetricName + "-first_byte_time"),
+      metric = @makeMetric("first_byte_time",
         (performance.timing.responseStart - performance.timing.connectStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
 
     if performance.timing.responseStart > 0 and performance.timing.responseEnd > 0
-      metric = @makeMetric((baseMetricName + "-response_recv_time"),
+      metric = @makeMetric("response_recv_time",
         (performance.timing.responseEnd - performance.timing.responseStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
 
     if performance.timing.loadEventStart > 0
-      metric = @makeMetric((baseMetricName + "-page_load_time"),
+      metric = @makeMetric("page_load_time",
         (performance.timing.loadEventStart - performance.timing.navigationStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
-      events.push(@makeEvent(baseMetricName + "-page_load"))
+      events.push(@makeEvent("page_load", timestamp, scope, category))
 
     data =
       metrics: metrics
