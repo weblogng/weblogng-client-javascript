@@ -21,12 +21,21 @@ define ['logger'], (logger) ->
   Logger::_createAPIConnection = (apiUrl) ->
     return new MockWS(apiUrl)
 
+  makeRandomString = (base, index) ->
+    randModValue = randInt(5)
+    if (index % randModValue == 0)
+      return undefined
+    else
+      return "#{base}_#{index}-#{generateUniqueId()}"
+
   makeMetric = () ->
     metric = {}
     metric.name = "metric_name_" + randInt(25)
     metric.value = Math.random() * 100
     metric.unit = "ms"
     metric.timestamp = epochTimeInMilliseconds()
+    metric.scope = makeRandomString("scope", 0)
+    metric.category = makeRandomString("category", 0)
 
     return metric
 
@@ -205,14 +214,18 @@ define ['logger'], (logger) ->
       application = "application-"
       logger = new Logger(apiHost, apiKey, {application: application})
 
-      for num in [1..25]
+      for num in [1..50]
         metricName = "metric_name_#{num}_" + randInt(1000)
         metricValue = Math.random()
         timestamp = epochTimeInMilliseconds()
+        scope = makeRandomString("scope", num)
+        category = makeRandomString("category", num)
 
-        metric = logger.makeMetric(metricName, metricValue, timestamp)
+        metric = logger.makeMetric(metricName, metricValue, timestamp, scope, category)
 
         expect(metric.name).toBe(metricName)
+        expect(metric.scope).toBe(scope)
+        expect(metric.category).toBe(category)
         expect(metric.value).toBe(metricValue)
         expect(metric.timestamp).toBe(timestamp)
         expect(metric.unit).toBe("ms")

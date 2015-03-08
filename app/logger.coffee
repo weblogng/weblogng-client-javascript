@@ -150,13 +150,21 @@ class weblogng.Logger
       , "timestamp": timestamp
     }
 
-  makeMetric: (name, value, timestamp = epochTimeInMilliseconds()) ->
-    return {
-    "name": name
+  makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = undefined, category = undefined) ->
+    metric = {
+      "name": name
       , "value": value
       , "unit": "ms"
       , "timestamp": timestamp
     }
+
+    if scope
+      metric.scope = scope
+
+    if category
+      metric.category = category
+
+    return metric
 
   _sendToAPI: () ->
     events = @buffers.events
