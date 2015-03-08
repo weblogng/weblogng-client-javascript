@@ -523,6 +523,8 @@ define ['logger'], (logger) ->
       pageName = 'some'
       spyOn(weblogng, 'toPageName').andReturn(pageName);
 
+      category = 'navigation timing'
+
       navTimingData = logger._generateNavigationTimingData()
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
@@ -534,10 +536,10 @@ define ['logger'], (logger) ->
 
       actualTimestamp = metrics[0].timestamp
 
-      expect(metrics[0]).toEqual(logger.makeMetric(pageName + '-dns_lookup_time', 150, actualTimestamp))
-      expect(metrics[1]).toEqual(logger.makeMetric(pageName + '-first_byte_time', 250, actualTimestamp))
-      expect(metrics[2]).toEqual(logger.makeMetric(pageName + '-response_recv_time', 200, actualTimestamp))
-      expect(metrics[3]).toEqual(logger.makeMetric(pageName + '-page_load_time', 1000, actualTimestamp))
+      expect(metrics[0]).toEqual(logger.makeMetric('dns_lookup_time', 150, actualTimestamp, pageName, category))
+      expect(metrics[1]).toEqual(logger.makeMetric('first_byte_time', 250, actualTimestamp, pageName, category))
+      expect(metrics[2]).toEqual(logger.makeMetric('response_recv_time', 200, actualTimestamp, pageName, category))
+      expect(metrics[3]).toEqual(logger.makeMetric('page_load_time', 1000, actualTimestamp, pageName, category))
 
       events = navTimingData.events
       expect(events[0]).toEqual(logger.makeEvent(pageName + '-page_load', actualTimestamp))

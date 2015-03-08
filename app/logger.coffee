@@ -104,6 +104,9 @@ class weblogng.Timer
     return @tFinish - @tStart
 
 class weblogng.Logger
+
+  @CAT_NAVIGATION_TIMING: 'navigation timing'
+
   constructor: (@apiHost, @apiKey, @options = {
     publishNavigationTimingMetrics: true
     , publishUserActive: true
@@ -304,36 +307,45 @@ class weblogng.Logger
 
   _generateNavigationTimingData: () ->
     performance = locatePerformanceObject()
-    baseMetricName = toPageName(location)
+    scope = toPageName(location)
+    category = @constructor.CAT_NAVIGATION_TIMING
     timestamp = epochTimeInMilliseconds()
 
     events = []
     metrics = []
 
     if performance.timing.dnsLookupStart > 0 and performance.timing.dnsLookupEnd > 0
-      metric = @makeMetric((baseMetricName + "-dns_lookup_time"),
+      metric = @makeMetric("dns_lookup_time",
         (performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
 
     if performance.timing.connectStart > 0 and performance.timing.responseStart > 0
-      metric = @makeMetric((baseMetricName + "-first_byte_time"),
+      metric = @makeMetric("first_byte_time",
         (performance.timing.responseStart - performance.timing.connectStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
 
     if performance.timing.responseStart > 0 and performance.timing.responseEnd > 0
-      metric = @makeMetric((baseMetricName + "-response_recv_time"),
+      metric = @makeMetric("response_recv_time",
         (performance.timing.responseEnd - performance.timing.responseStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
 
     if performance.timing.loadEventStart > 0
-      metric = @makeMetric((baseMetricName + "-page_load_time"),
+      metric = @makeMetric("page_load_time",
         (performance.timing.loadEventStart - performance.timing.navigationStart),
-        timestamp)
+        timestamp,
+        scope,
+        category)
       metrics.push(metric)
-      events.push(@makeEvent(baseMetricName + "-page_load"))
+      events.push(@makeEvent(scope + "-page_load"))
 
     data =
       metrics: metrics
