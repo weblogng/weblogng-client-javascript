@@ -147,6 +147,14 @@ class weblogng.Logger
 
     @_throttledSendToAPI = weblogng.throttle(_sendToAPI, 5000)
 
+  _addAttributesToLogItem: (obj, scope, category) ->
+    if scope
+      obj.scope = scope
+
+    if category
+      obj.category = category
+
+    return obj
 
   makeEvent: (name, timestamp = epochTimeInMilliseconds(), scope = 'application', category = undefined) ->
     event = {
@@ -154,13 +162,7 @@ class weblogng.Logger
       , "timestamp": timestamp
     }
 
-    if scope
-      event.scope = scope
-
-    if category
-      event.category = category
-
-    return event
+    return @_addAttributesToLogItem(event, scope, category)
 
   makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = 'application', category = undefined) ->
     metric = {
@@ -170,13 +172,7 @@ class weblogng.Logger
       , "timestamp": timestamp
     }
 
-    if scope
-      metric.scope = scope
-
-    if category
-      metric.category = category
-
-    return metric
+    return @_addAttributesToLogItem(metric, scope, category)
 
   _sendToAPI: () ->
     events = @buffers.events
