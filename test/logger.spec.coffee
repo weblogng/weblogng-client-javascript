@@ -21,7 +21,7 @@ define ['logger'], (logger) ->
   Logger::_createAPIConnection = (apiUrl) ->
     return new MockWS(apiUrl)
 
-  makeRandomString = (base, index) ->
+  makeRandomString = (base, index = 10) ->
     randModValue = randInt(5)
     if (index % randModValue == 0)
       return undefined
@@ -34,8 +34,8 @@ define ['logger'], (logger) ->
     metric.value = Math.random() * 100
     metric.unit = "ms"
     metric.timestamp = epochTimeInMilliseconds()
-    metric.scope = makeRandomString("scope", 0)
-    metric.category = makeRandomString("category", 0)
+    metric.scope = makeRandomString("scope")
+    metric.category = makeRandomString("category")
 
     return metric
 
@@ -242,7 +242,7 @@ define ['logger'], (logger) ->
       expect(metric.category).toBeUndefined()
 
     it 'should make metrics using the provided data', ->
-      application = "application-"
+      application = makeRandomString("application")
       logger = new Logger(apiHost, apiKey, {application: application})
 
       for num in [1..50]
