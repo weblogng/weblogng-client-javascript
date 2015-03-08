@@ -200,11 +200,11 @@ define ['logger'], (logger) ->
     it 'should make events using the minimal-required data', ->
       logger = new Logger(apiHost, apiKey)
 
-      eventName = "event_name_" + randInt(1000)
-      event = logger.makeEvent(eventName)
+      name = "event_name_" + randInt(1000)
+      event = logger.makeEvent(name)
 
-      expect(event.name).toBe(eventName)
-      expect(event.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 3)
+      expect(event.name).toBe(name)
+      expect(event.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
       expect(event.scope).toBe('application')
       expect(event.category).toBeUndefined()
 
@@ -229,6 +229,17 @@ define ['logger'], (logger) ->
           expect(event.scope).toBe('application')
 
         expect(event.category).toBe(category)
+
+    it 'should make metrics using the minimal-required data', ->
+      logger = new Logger(apiHost, apiKey)
+
+      name = "metric_name_" + randInt(1000)
+      metric = logger.makeMetric(name, randInt(1000))
+
+      expect(metric.name).toBe(name)
+      expect(metric.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
+      expect(metric.scope).toBe('application')
+      expect(metric.category).toBeUndefined()
 
     it 'should make metrics using the provided data', ->
       application = "application-"
