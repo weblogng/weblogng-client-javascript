@@ -197,6 +197,17 @@ define ['logger'], (logger) ->
     it 'should build secure logging api urls', ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
+    it 'should make events using the minimal-required data', ->
+      logger = new Logger(apiHost, apiKey)
+
+      eventName = "event_name_" + randInt(1000)
+      event = logger.makeEvent(eventName)
+
+      expect(event.name).toBe(eventName)
+      expect(event.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 3)
+      expect(event.scope).toBe('application')
+      expect(event.category).toBeUndefined()
+
     it 'should make events using the provided data', ->
       application = "application"
       logger = new Logger(apiHost, apiKey, {application: application})
