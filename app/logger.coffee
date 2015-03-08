@@ -103,9 +103,11 @@ class weblogng.Timer
   getElapsedTime: () ->
     return @tFinish - @tStart
 
-class weblogng.Logger
+class weblogng.Category
 
-  @CAT_NAVIGATION_TIMING: 'navigation timing'
+  @NAVIGATION_TIMING: 'navigation timing'
+
+class weblogng.Logger
 
   constructor: (@apiHost, @apiKey, @options = {
     publishNavigationTimingMetrics: true
@@ -308,7 +310,7 @@ class weblogng.Logger
   _generateNavigationTimingData: () ->
     performance = locatePerformanceObject()
     scope = toPageName(location)
-    category = @constructor.CAT_NAVIGATION_TIMING
+    category = weblogng.Category.NAVIGATION_TIMING
     timestamp = epochTimeInMilliseconds()
 
     events = []

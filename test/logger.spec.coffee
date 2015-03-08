@@ -523,7 +523,7 @@ define ['logger'], (logger) ->
       pageName = 'some'
       spyOn(weblogng, 'toPageName').andReturn(pageName);
 
-      category = 'navigation timing'
+      category = weblogng.Category.NAVIGATION_TIMING
 
       navTimingData = logger._generateNavigationTimingData()
 
