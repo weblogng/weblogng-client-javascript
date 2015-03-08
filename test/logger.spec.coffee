@@ -564,10 +564,8 @@ define ['logger'], (logger) ->
 
       expect(weblogng.toPageName).toHaveBeenCalledWith(location)
 
-      expect(navTimingData[pageName + '-dns_lookup_time']).toBeUndefined()
-      expect(navTimingData[pageName + '-page_load_time']).toBeUndefined()
-      expect(navTimingData[pageName + '-response_recv_time']).toBeUndefined()
-      expect(navTimingData[pageName + '-first_byte_time']).toBeUndefined()
+      expect(navTimingData.events).toEqual([])
+      expect(navTimingData.metrics).toEqual([])
 
   describe 'Logger user activity support', ->
     window = null
