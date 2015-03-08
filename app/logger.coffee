@@ -197,22 +197,6 @@ class weblogng.Logger
   _createAPIConnection: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)
 
-  _createMetricMessage: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
-    sanitizedMetricName = @_sanitizeMetricName(metricName)
-    message =
-      "apiAccessKey": @apiKey,
-      "context": {},
-      "metrics": [
-        {
-          "name": sanitizedMetricName,
-          "value": metricValue,
-          "unit": "ms",
-          "timestamp": timestamp
-        }
-      ]
-
-    return message
-
   _createLogMessage: (events = [], metrics = []) ->
     for event in events
       event.name = @_sanitizeMetricName(event.name)

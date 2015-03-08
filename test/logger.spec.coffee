@@ -268,7 +268,6 @@ define ['logger'], (logger) ->
 
     it 'sendMetric should store metrics in buffer and trigger a send via the apiConnection', ->
       spyOn(logger.apiConnection, 'send')
-      spyOn(logger, '_createMetricMessage')
       spyOn(logger, '_createLogMessage')
       spyOn(logger, '_triggerSendToAPI')
 
@@ -280,60 +279,11 @@ define ['logger'], (logger) ->
 
       expect(logger._triggerSendToAPI).toHaveBeenCalled()
 
-      expect(logger._createMetricMessage).not.toHaveBeenCalled()
       expect(logger._createLogMessage).not.toHaveBeenCalled()
       expect(logger.apiConnection.send).not.toHaveBeenCalled()
 
       expect(logger.buffers.events).toEqual([])
       expect(logger.buffers.metrics).toEqual([logger.makeMetric(metricName, metricValue, timestamp)])
-
-    it 'should create a metric message using provided name and value, defaulting to current epoch time', ->
-      for num in [1..100]
-        metricName = "metric_name_#{num}_" + Math.floor(Math.random() * 1000)
-        metricValue = Math.random()
-        timestamp = epochTimeInMilliseconds()
-        truncatedTimestamp = Math.floor(timestamp / 10)
-
-        message = logger._createMetricMessage(metricName, metricValue)
-
-        actualTimestamp = message.metrics[0].timestamp
-        actualTruncatedTimestamp = Math.floor(actualTimestamp / 10)
-        expect(actualTruncatedTimestamp).toBe(truncatedTimestamp)
-
-        expectedLogMessage =
-          "apiAccessKey": apiKey,
-          "context": {},
-          "metrics": [
-            {
-              "name": metricName,
-              "value": metricValue,
-              "unit": "ms",
-              "timestamp": actualTimestamp
-            }
-          ]
-
-        expect(message).toEqual(expectedLogMessage)
-
-    it 'should create a metric message using provided name and value time, when provided', ->
-      metricName = "metric_name"
-      metricValue = 42
-      timestamp = 1362714242000
-
-      expectedLogMessage =
-        "apiAccessKey": apiKey,
-        "context": {},
-        "metrics": [
-          {
-            "name": metricName,
-            "value": metricValue,
-            "unit": "ms",
-            "timestamp": timestamp
-          }
-        ]
-
-      message = logger._createMetricMessage(metricName, metricValue, timestamp)
-
-      expect(message).toEqual(expectedLogMessage)
 
     it 'should create a log message using provided events and metrics', ->
 
@@ -378,13 +328,6 @@ define ['logger'], (logger) ->
       forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
       for forbiddenChar in forbiddenChars
         expect(logger._sanitizeMetricName("metric-name_1#{forbiddenChar}2")).toBe("metric-name_1_2")
-
-    it 'should sanitize metric names when sending a metric', ->
-      spyOn(logger, '_sanitizeMetricName')
-
-      logger._createMetricMessage("metric name", 42)
-
-      expect(logger._sanitizeMetricName).toHaveBeenCalled()
 
     it 'should record the current time when recordStart is called for a given metric name', ->
       metricName = 'save'
