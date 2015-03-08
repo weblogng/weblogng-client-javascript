@@ -103,6 +103,10 @@ class weblogng.Timer
   getElapsedTime: () ->
     return @tFinish - @tStart
 
+class weblogng.Scope
+
+  @APPLICATION: 'application'
+
 class weblogng.Category
 
   @NAVIGATION_TIMING: 'navigation timing'
@@ -156,7 +160,7 @@ class weblogng.Logger
 
     return obj
 
-  makeEvent: (name, timestamp = epochTimeInMilliseconds(), scope = 'application', category = undefined) ->
+  makeEvent: (name, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
     event = {
       "name": name
       , "timestamp": timestamp
@@ -164,7 +168,7 @@ class weblogng.Logger
 
     return @_addAttributesToLogItem(event, scope, category)
 
-  makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = 'application', category = undefined) ->
+  makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
     metric = {
       "name": name
       , "value": value

@@ -205,7 +205,7 @@ define ['logger'], (logger) ->
 
       expect(event.name).toBe(name)
       expect(event.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
-      expect(event.scope).toBe('application')
+      expect(event.scope).toBe(Scope.APPLICATION)
       expect(event.category).toBeUndefined()
 
     it 'should make events using the provided data', ->
@@ -226,7 +226,7 @@ define ['logger'], (logger) ->
         if scope
           expect(event.scope).toBe(scope)
         else
-          expect(event.scope).toBe('application')
+          expect(event.scope).toBe(Scope.APPLICATION)
 
         expect(event.category).toBe(category)
 
@@ -238,7 +238,7 @@ define ['logger'], (logger) ->
 
       expect(metric.name).toBe(name)
       expect(metric.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
-      expect(metric.scope).toBe('application')
+      expect(metric.scope).toBe(Scope.APPLICATION)
       expect(metric.category).toBeUndefined()
 
     it 'should make metrics using the provided data', ->
@@ -259,7 +259,7 @@ define ['logger'], (logger) ->
         if scope
           expect(metric.scope).toBe(scope)
         else
-          expect(metric.scope).toBe('application')
+          expect(metric.scope).toBe(Scope.APPLICATION)
 
         expect(metric.category).toBe(category)
         expect(metric.value).toBe(metricValue)
