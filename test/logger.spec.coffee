@@ -198,17 +198,26 @@ define ['logger'], (logger) ->
       expect(logger.apiUrl).toBe("https://#{apiHost}/v2/log")
 
     it 'should make events using the provided data', ->
-      application = "application-"
+      application = "application"
       logger = new Logger(apiHost, apiKey, {application: application})
 
-      for num in [1..25]
+      for num in [1..50]
         eventName = "event_name_#{num}_" + randInt(1000)
         timestamp = epochTimeInMilliseconds()
+        scope = makeRandomString("scope", num)
+        category = makeRandomString("category", num)
 
-        event = logger.makeEvent(eventName, timestamp)
+        event = logger.makeEvent(eventName, timestamp, scope, category)
 
         expect(event.name).toBe(eventName)
         expect(event.timestamp).toBe(timestamp)
+
+        if scope
+          expect(event.scope).toBe(scope)
+        else
+          expect(event.scope).toBe('application')
+
+        expect(event.category).toBe(category)
 
     it 'should make metrics using the provided data', ->
       application = "application-"
@@ -224,7 +233,12 @@ define ['logger'], (logger) ->
         metric = logger.makeMetric(metricName, metricValue, timestamp, scope, category)
 
         expect(metric.name).toBe(metricName)
-        expect(metric.scope).toBe(scope)
+
+        if scope
+          expect(metric.scope).toBe(scope)
+        else
+          expect(metric.scope).toBe('application')
+
         expect(metric.category).toBe(category)
         expect(metric.value).toBe(metricValue)
         expect(metric.timestamp).toBe(timestamp)
@@ -542,7 +556,7 @@ define ['logger'], (logger) ->
       expect(metrics[3]).toEqual(logger.makeMetric('page_load_time', 1000, actualTimestamp, pageName, category))
 
       events = navTimingData.events
-      expect(events[0]).toEqual(logger.makeEvent(pageName + '-page_load', actualTimestamp))
+      expect(events[0]).toEqual(logger.makeEvent('page_load', actualTimestamp, pageName, category))
 
     it '_generateNavigationTimingData should only generate metrics for events that have occurred', ->
       T_HAS_NOT_OCCURRED = 0

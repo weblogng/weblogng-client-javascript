@@ -148,14 +148,21 @@ class weblogng.Logger
     @_throttledSendToAPI = weblogng.throttle(_sendToAPI, 5000)
 
 
-  makeEvent: (name, timestamp = epochTimeInMilliseconds()) ->
-    return {
-    "name": name
-      , "scope": "application"
+  makeEvent: (name, timestamp = epochTimeInMilliseconds(), scope = 'application', category = undefined) ->
+    event = {
+      "name": name
       , "timestamp": timestamp
     }
 
-  makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = undefined, category = undefined) ->
+    if scope
+      event.scope = scope
+
+    if category
+      event.category = category
+
+    return event
+
+  makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = 'application', category = undefined) ->
     metric = {
       "name": name
       , "value": value
@@ -347,7 +354,7 @@ class weblogng.Logger
         scope,
         category)
       metrics.push(metric)
-      events.push(@makeEvent(scope + "-page_load"))
+      events.push(@makeEvent("page_load", timestamp, scope, category))
 
     data =
       metrics: metrics
