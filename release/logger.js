@@ -148,6 +148,24 @@
 
   })();
 
+  weblogng.Scope = (function() {
+    function Scope() {}
+
+    Scope.APPLICATION = 'application';
+
+    return Scope;
+
+  })();
+
+  weblogng.Category = (function() {
+    function Category() {}
+
+    Category.NAVIGATION_TIMING = 'navigation timing';
+
+    return Category;
+
+  })();
+
   weblogng.Logger = (function() {
     function Logger(apiHost, apiKey, options) {
       var _ref, _ref1, _sendToAPI;
@@ -194,27 +212,52 @@
       this._throttledSendToAPI = weblogng.throttle(_sendToAPI, 5000);
     }
 
-    Logger.prototype.makeEvent = function(name, timestamp) {
-      if (timestamp == null) {
-        timestamp = epochTimeInMilliseconds();
+    Logger.prototype._addAttributesToLogItem = function(obj, scope, category) {
+      if (scope) {
+        obj.scope = scope;
       }
-      return {
-        "name": name,
-        "scope": "application",
-        "timestamp": timestamp
-      };
+      if (category) {
+        obj.category = category;
+      }
+      return obj;
     };
 
-    Logger.prototype.makeMetric = function(name, value, timestamp) {
+    Logger.prototype.makeEvent = function(name, timestamp, scope, category) {
+      var event;
       if (timestamp == null) {
         timestamp = epochTimeInMilliseconds();
       }
-      return {
+      if (scope == null) {
+        scope = Scope.APPLICATION;
+      }
+      if (category == null) {
+        category = void 0;
+      }
+      event = {
+        "name": name,
+        "timestamp": timestamp
+      };
+      return this._addAttributesToLogItem(event, scope, category);
+    };
+
+    Logger.prototype.makeMetric = function(name, value, timestamp, scope, category) {
+      var metric;
+      if (timestamp == null) {
+        timestamp = epochTimeInMilliseconds();
+      }
+      if (scope == null) {
+        scope = Scope.APPLICATION;
+      }
+      if (category == null) {
+        category = void 0;
+      }
+      metric = {
         "name": name,
         "value": value,
         "unit": "ms",
         "timestamp": timestamp
       };
+      return this._addAttributesToLogItem(metric, scope, category);
     };
 
     Logger.prototype._sendToAPI = function() {
@@ -240,27 +283,6 @@
 
     Logger.prototype._createAPIConnection = function(apiUrl) {
       return new weblogng.APIConnection(apiUrl);
-    };
-
-    Logger.prototype._createMetricMessage = function(metricName, metricValue, timestamp) {
-      var message, sanitizedMetricName;
-      if (timestamp == null) {
-        timestamp = epochTimeInMilliseconds();
-      }
-      sanitizedMetricName = this._sanitizeMetricName(metricName);
-      message = {
-        "apiAccessKey": this.apiKey,
-        "context": {},
-        "metrics": [
-          {
-            "name": sanitizedMetricName,
-            "value": metricValue,
-            "unit": "ms",
-            "timestamp": timestamp
-          }
-        ]
-      };
-      return message;
     };
 
     Logger.prototype._createLogMessage = function(events, metrics) {
@@ -392,28 +414,29 @@
     };
 
     Logger.prototype._generateNavigationTimingData = function() {
-      var baseMetricName, data, events, metric, metrics, performance, timestamp;
+      var category, data, events, metric, metrics, performance, scope, timestamp;
       performance = locatePerformanceObject();
-      baseMetricName = toPageName(location);
+      scope = toPageName(location);
+      category = weblogng.Category.NAVIGATION_TIMING;
       timestamp = epochTimeInMilliseconds();
       events = [];
       metrics = [];
       if (performance.timing.dnsLookupStart > 0 && performance.timing.dnsLookupEnd > 0) {
-        metric = this.makeMetric(baseMetricName + "-dns_lookup_time", performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart, timestamp);
+        metric = this.makeMetric("dns_lookup_time", performance.timing.dnsLookupEnd - performance.timing.dnsLookupStart, timestamp, scope, category);
         metrics.push(metric);
       }
       if (performance.timing.connectStart > 0 && performance.timing.responseStart > 0) {
-        metric = this.makeMetric(baseMetricName + "-first_byte_time", performance.timing.responseStart - performance.timing.connectStart, timestamp);
+        metric = this.makeMetric("first_byte_time", performance.timing.responseStart - performance.timing.connectStart, timestamp, scope, category);
         metrics.push(metric);
       }
       if (performance.timing.responseStart > 0 && performance.timing.responseEnd > 0) {
-        metric = this.makeMetric(baseMetricName + "-response_recv_time", performance.timing.responseEnd - performance.timing.responseStart, timestamp);
+        metric = this.makeMetric("response_recv_time", performance.timing.responseEnd - performance.timing.responseStart, timestamp, scope, category);
         metrics.push(metric);
       }
       if (performance.timing.loadEventStart > 0) {
-        metric = this.makeMetric(baseMetricName + "-page_load_time", performance.timing.loadEventStart - performance.timing.navigationStart, timestamp);
+        metric = this.makeMetric("page_load_time", performance.timing.loadEventStart - performance.timing.navigationStart, timestamp, scope, category);
         metrics.push(metric);
-        events.push(this.makeEvent(baseMetricName + "-page_load"));
+        events.push(this.makeEvent("page_load", timestamp, scope, category));
       }
       data = {
         metrics: metrics,
