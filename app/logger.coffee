@@ -190,8 +190,8 @@ class weblogng.Logger
   _triggerSendToAPI: () ->
     @_throttledSendToAPI()
 
-  sendMetric: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
-    @buffers.metrics.push(@makeMetric(metricName, metricValue, timestamp))
+  sendMetric: (metricName, metricValue, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
+    @buffers.metrics.push(@makeMetric(metricName, metricValue, timestamp, scope, category))
     @_triggerSendToAPI()
 
   _createAPIConnection: (apiUrl) ->
