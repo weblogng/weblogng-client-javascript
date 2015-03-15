@@ -266,25 +266,6 @@ define ['logger'], (logger) ->
         expect(metric.timestamp).toBe(timestamp)
         expect(metric.unit).toBe("ms")
 
-    it 'sendMetric should store metrics in buffer and trigger a send via the apiConnection', ->
-      spyOn(logger.apiConnection, 'send')
-      spyOn(logger, '_createLogMessage')
-      spyOn(logger, '_triggerSendToAPI')
-
-      metricName = 'metric_name'
-      metricValue = 34
-      timestamp = epochTimeInMilliseconds()
-
-      logger.sendMetric(metricName, metricValue, timestamp)
-
-      expect(logger._triggerSendToAPI).toHaveBeenCalled()
-
-      expect(logger._createLogMessage).not.toHaveBeenCalled()
-      expect(logger.apiConnection.send).not.toHaveBeenCalled()
-
-      expect(logger.buffers.events).toEqual([])
-      expect(logger.buffers.metrics).toEqual([logger.makeMetric(metricName, metricValue, timestamp)])
-
     it 'should create a log message using provided events and metrics', ->
 
       for num in [1..10]
@@ -337,6 +318,43 @@ define ['logger'], (logger) ->
       expect(timer).toBe(logger.timers[metricName])
       now = epochTimeInMilliseconds()
       expect(timer.tStart - now).toBeLessThan(2)
+
+    describe 'sendMetric', ->
+      it 'should store metrics in buffer and trigger a send via the apiConnection', ->
+        spyOn(logger.apiConnection, 'send')
+        spyOn(logger, '_createLogMessage')
+        spyOn(logger, '_triggerSendToAPI')
+
+        metricName = 'metric_name'
+        metricValue = 34
+        timestamp = epochTimeInMilliseconds()
+
+        logger.sendMetric(metricName, metricValue, timestamp)
+
+        expect(logger._triggerSendToAPI).toHaveBeenCalled()
+
+        expect(logger._createLogMessage).not.toHaveBeenCalled()
+        expect(logger.apiConnection.send).not.toHaveBeenCalled()
+
+        expect(logger.buffers.events).toEqual([])
+        expect(logger.buffers.metrics).toEqual([logger.makeMetric(metricName, metricValue, timestamp)])
+
+    it 'should send metrics using the provided parameters', ->
+      spyOn(logger, '_triggerSendToAPI')
+
+      for num in [1..25]
+        metricName = "metric_name_#{randInt(1000)}"
+        metricValue = randInt(1000)
+        timestamp = epochTimeInMilliseconds()
+        scope = makeRandomString("scope")
+        category = makeRandomString("category")
+
+        logger.sendMetric(metricName, metricValue, timestamp, scope, category)
+
+        expectedMetric = logger.makeMetric(metricName, metricValue, timestamp, scope, category)
+        expect(logger.buffers.metrics).toContain(expectedMetric)
+
+        expect(logger._triggerSendToAPI).toHaveBeenCalled()
 
     it 'should record the current time when recordFinish is called for a given metric name', ->
       metricName = 'save'
@@ -409,15 +427,20 @@ define ['logger'], (logger) ->
     beforeEach () ->
       logger = new Logger(apiHost, apiKey)
 
-    it 'should buffer an event when recordEvent is called', ->
+    it 'should buffer an event with the provided parameters when recordEvent is called', ->
       spyOn(logger, '_triggerSendToAPI')
 
-      for num in [1..10]
+      for num in [1..25]
         eventName = "appEvent-#{generateUniqueId(3)}"
         timestamp = epochTimeInMilliseconds()
-        logger.recordEvent(eventName, timestamp)
+        scope = makeRandomString("scope")
+        category = makeRandomString("category")
 
-        expect(logger.buffers.events).toContain(logger.makeEvent(eventName, timestamp))
+        logger.recordEvent(eventName, timestamp, scope, category)
+
+        expectedEvent = logger.makeEvent(eventName, timestamp, scope, category)
+        expect(logger.buffers.events).toContain(expectedEvent)
+
         expect(logger._triggerSendToAPI).toHaveBeenCalled()
 
 

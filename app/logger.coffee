@@ -190,8 +190,8 @@ class weblogng.Logger
   _triggerSendToAPI: () ->
     @_throttledSendToAPI()
 
-  sendMetric: (metricName, metricValue, timestamp = epochTimeInMilliseconds()) ->
-    @buffers.metrics.push(@makeMetric(metricName, metricValue, timestamp))
+  sendMetric: (metricName, metricValue, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
+    @buffers.metrics.push(@makeMetric(metricName, metricValue, timestamp, scope, category))
     @_triggerSendToAPI()
 
   _createAPIConnection: (apiUrl) ->
@@ -259,8 +259,8 @@ class weblogng.Logger
 
     return
 
-  recordEvent: (eventName, timestamp=epochTimeInMilliseconds()) ->
-    @buffers.events.push(@makeEvent(eventName, timestamp))
+  recordEvent: (eventName, timestamp=epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
+    @buffers.events.push(@makeEvent(eventName, timestamp, scope, category))
     @_triggerSendToAPI()
 
   _initNavigationTimingPublishProcess: () ->
