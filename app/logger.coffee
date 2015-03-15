@@ -259,8 +259,8 @@ class weblogng.Logger
 
     return
 
-  recordEvent: (eventName, timestamp=epochTimeInMilliseconds()) ->
-    @buffers.events.push(@makeEvent(eventName, timestamp))
+  recordEvent: (eventName, timestamp=epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
+    @buffers.events.push(@makeEvent(eventName, timestamp, scope, category))
     @_triggerSendToAPI()
 
   _initNavigationTimingPublishProcess: () ->

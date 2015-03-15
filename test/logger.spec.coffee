@@ -427,15 +427,20 @@ define ['logger'], (logger) ->
     beforeEach () ->
       logger = new Logger(apiHost, apiKey)
 
-    it 'should buffer an event when recordEvent is called', ->
+    it 'should buffer an event with the provided parameters when recordEvent is called', ->
       spyOn(logger, '_triggerSendToAPI')
 
-      for num in [1..10]
+      for num in [1..25]
         eventName = "appEvent-#{generateUniqueId(3)}"
         timestamp = epochTimeInMilliseconds()
-        logger.recordEvent(eventName, timestamp)
+        scope = makeRandomString("scope")
+        category = makeRandomString("category")
 
-        expect(logger.buffers.events).toContain(logger.makeEvent(eventName, timestamp))
+        logger.recordEvent(eventName, timestamp, scope, category)
+
+        expectedEvent = logger.makeEvent(eventName, timestamp, scope, category)
+        expect(logger.buffers.events).toContain(expectedEvent)
+
         expect(logger._triggerSendToAPI).toHaveBeenCalled()
 
 
