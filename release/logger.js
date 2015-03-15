@@ -273,11 +273,17 @@
       return this._throttledSendToAPI();
     };
 
-    Logger.prototype.sendMetric = function(metricName, metricValue, timestamp) {
+    Logger.prototype.sendMetric = function(metricName, metricValue, timestamp, scope, category) {
       if (timestamp == null) {
         timestamp = epochTimeInMilliseconds();
       }
-      this.buffers.metrics.push(this.makeMetric(metricName, metricValue, timestamp));
+      if (scope == null) {
+        scope = Scope.APPLICATION;
+      }
+      if (category == null) {
+        category = void 0;
+      }
+      this.buffers.metrics.push(this.makeMetric(metricName, metricValue, timestamp, scope, category));
       return this._triggerSendToAPI();
     };
 
@@ -365,11 +371,17 @@
       }
     };
 
-    Logger.prototype.recordEvent = function(eventName, timestamp) {
+    Logger.prototype.recordEvent = function(eventName, timestamp, scope, category) {
       if (timestamp == null) {
         timestamp = epochTimeInMilliseconds();
       }
-      this.buffers.events.push(this.makeEvent(eventName, timestamp));
+      if (scope == null) {
+        scope = Scope.APPLICATION;
+      }
+      if (category == null) {
+        category = void 0;
+      }
+      this.buffers.events.push(this.makeEvent(eventName, timestamp, scope, category));
       return this._triggerSendToAPI();
     };
 
