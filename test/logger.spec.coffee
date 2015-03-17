@@ -305,10 +305,19 @@ define ['logger'], (logger) ->
 
         expect(message.context).toEqual(expectedContext)
 
+    it 'should allow desired metric names', ->
+      for metricName in [ 'GET localhost:8443',
+                          'POST www.weblogng.com',
+                          'PUT api.weblogng.com',
+                          'GET http://host.com/some/query/path?param=1',
+                          'GET https://host.com/some%20url%20encoded%20path?param=1',
+                          't.co' ]
+        expect(logger._sanitizeMetricName(metricName)).toBe(metricName)
+
     it 'should sanitize metric names', ->
-      forbiddenChars = ['.', '!', ',', ';', ':', '?', '/', '\\', '@', '#', '$', '%', '^', '&', '*', '(', ')']
+      forbiddenChars = ['\'', '"', '\n']
       for forbiddenChar in forbiddenChars
-        expect(logger._sanitizeMetricName("metric-name_1#{forbiddenChar}2")).toBe("metric-name_1_2")
+        expect(logger._sanitizeMetricName("forbidden#{forbiddenChar}char")).toBe("forbidden char")
 
     it 'should record the current time when recordStart is called for a given metric name', ->
       metricName = 'save'

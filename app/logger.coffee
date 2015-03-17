@@ -222,7 +222,7 @@ class weblogng.Logger
     return message
 
   _sanitizeMetricName: (metricName) ->
-    metricName.replace /[^\w\d_-]/g, '_'
+    metricName.replace /[^\w\d\:\\?\=\/\\\._\-\%]/g, ' '
 
   recordStart: (metricName) ->
     timer = new weblogng.Timer()
