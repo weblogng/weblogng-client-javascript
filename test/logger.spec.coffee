@@ -139,6 +139,7 @@ define ['logger'], (logger) ->
     apiKey = "abcd-1234"
     logger = null
     window = null
+    forbiddenMetricNameChars = ['\'', '"', '\n']
 
     beforeEach () ->
       logger = new Logger(apiHost, apiKey)
@@ -314,10 +315,13 @@ define ['logger'], (logger) ->
                           't.co' ]
         expect(logger._sanitizeMetricName(metricName)).toBe(metricName)
 
-    it 'should sanitize metric names', ->
-      forbiddenChars = ['\'', '"', '\n']
-      for forbiddenChar in forbiddenChars
+    it 'should sanitize metric names of forbidden characters', ->
+      forbiddenMetricNameChars = ['\'', '"', '\n']
+      for forbiddenChar in forbiddenMetricNameChars
         expect(logger._sanitizeMetricName("forbidden#{forbiddenChar}char")).toBe("forbidden char")
+
+    it 'should sanitize metric names of multiple forbidden characters', ->
+      expect(logger._sanitizeMetricName("forbidden#{forbiddenMetricNameChars.toString()}char")).toBe("forbidden char")
 
     it 'should record the current time when recordStart is called for a given metric name', ->
       metricName = 'save'

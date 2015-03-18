@@ -50,6 +50,7 @@ weblogng.hasNavigationTimingAPI = () ->
 weblogng.patterns = {
   MATCH_LEADING_AND_TRAILING_SLASHES: /^\/+|\/+$/g
   , MATCH_SLASHES: /\/+/g
+  ,  MATCH_FORBIDDEN_METRIC_NAME_CHARS: /[^\w\d\:\\?\=\/\\\._\-\%]+/g
 }
 
 weblogng.toPageName = (location) ->
@@ -222,7 +223,7 @@ class weblogng.Logger
     return message
 
   _sanitizeMetricName: (metricName) ->
-    metricName.replace /[^\w\d\:\\?\=\/\\\._\-\%]/g, ' '
+    metricName.replace patterns.MATCH_FORBIDDEN_METRIC_NAME_CHARS, ' '
 
   recordStart: (metricName) ->
     timer = new weblogng.Timer()
