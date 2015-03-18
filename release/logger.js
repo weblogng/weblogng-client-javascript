@@ -79,7 +79,8 @@
 
   weblogng.patterns = {
     MATCH_LEADING_AND_TRAILING_SLASHES: /^\/+|\/+$/g,
-    MATCH_SLASHES: /\/+/g
+    MATCH_SLASHES: /\/+/g,
+    MATCH_FORBIDDEN_METRIC_NAME_CHARS: /[^\w\d\:\\?\=\/\\\._\-\%]+/g
   };
 
   weblogng.toPageName = function(location) {
@@ -325,7 +326,7 @@
     };
 
     Logger.prototype._sanitizeMetricName = function(metricName) {
-      return metricName.replace(/[^\w\d_-]/g, '_');
+      return metricName.replace(patterns.MATCH_FORBIDDEN_METRIC_NAME_CHARS, ' ');
     };
 
     Logger.prototype.recordStart = function(metricName) {
