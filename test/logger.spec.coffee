@@ -243,8 +243,6 @@ define ['logger'], (logger) ->
         expect(metric.scope).toBe(Scope.APPLICATION)
         expect(metric.category).toBeUndefined()
 
-      console.log "num: #{num} #{metric.timestamp}"
-
     it 'should make metrics using the provided data', ->
       application = makeRandomString("application")
       logger = new Logger(apiHost, apiKey, {application: application})
