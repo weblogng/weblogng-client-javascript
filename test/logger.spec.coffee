@@ -234,13 +234,16 @@ define ['logger'], (logger) ->
     it 'should make metrics using the minimal-required data', ->
       logger = new Logger(apiHost, apiKey)
 
-      name = "metric_name_" + randInt(1000)
-      metric = logger.makeMetric(name, randInt(1000))
+      for num in [1..10]
+        name = "metric_name_" + randInt(1000)
+        metric = logger.makeMetric(name, randInt(1000))
 
-      expect(metric.name).toBe(name)
-      expect(metric.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
-      expect(metric.scope).toBe(Scope.APPLICATION)
-      expect(metric.category).toBeUndefined()
+        expect(metric.name).toBe(name)
+        expect(metric.timestamp / 1000).toBeCloseTo(epochTimeInMilliseconds() / 1000, 2)
+        expect(metric.scope).toBe(Scope.APPLICATION)
+        expect(metric.category).toBeUndefined()
+
+      console.log "num: #{num} #{metric.timestamp}"
 
     it 'should make metrics using the provided data', ->
       application = makeRandomString("application")
