@@ -111,6 +111,7 @@ class weblogng.Scope
 class weblogng.Category
 
   @NAVIGATION_TIMING: 'navigation timing'
+  @HTTP_REQUEST: 'http request'
 
 class weblogng.Logger
 

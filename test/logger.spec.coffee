@@ -134,6 +134,12 @@ define ['logger'], (logger) ->
 
       expect(Object.keys(ids).length).toBeGreaterThan(iterations - 1)
 
+  describe 'Category', ->
+
+    it 'should have well-known categories supported by the dashboard builder', ->
+      expect(Category.NAVIGATION_TIMING).toEqual('navigation timing')
+      expect(Category.HTTP_REQUEST).toEqual('http request')
+
   describe 'Logger', ->
     apiHost = "localhost:9000"
     apiKey = "abcd-1234"
