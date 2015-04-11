@@ -53,6 +53,18 @@ define ['logger'], (logger) ->
   makeEvents = (numEvents) ->
     (makeEvent() for num in [1..numEvents])
 
+  makeMessage = (num) ->
+    message = {}
+    message.level = "info"
+    message.scope = "application"
+    message.value = "message_" + num
+    message.timestamp = epochTimeInMilliseconds()
+
+    return message
+
+  makeMessages = (numMessages) ->
+    (makeMessage(num) for num in [1..numMessages])
+
   describe "Verify utility functions in WeblogNG client library exist", ->
     it "generateUniqueId should be defined", ->
       expect(generateUniqueId).toBeDefined()
@@ -237,6 +249,45 @@ define ['logger'], (logger) ->
 
         expect(event.category).toBe(category)
 
+    it 'should make messages using the minimal-required data', ->
+      logger = new Logger(apiHost, apiKey)
+
+      level = "info"
+      value = "message_" + randInt(1000)
+      message = logger.makeMessage(level, value)
+
+      expect(message.level).toBe(level)
+      expect(message.value).toBe(value)
+      expect(message.timestamp).toBeCloseTo(epochTimeInMilliseconds(), 5)
+      expect(message.scope).toBe(Scope.APPLICATION)
+      expect(message.category).toBeUndefined()
+
+    it 'should make messages using the provided data', ->
+      application = "application"
+      logger = new Logger(apiHost, apiKey, {application: application})
+
+      for num in [1..50]
+        messageLevel = "event_name_#{num}_" + randInt(1000)
+        messageValue = "event_name_#{num}_" + randInt(1000)
+        timestamp = epochTimeInMilliseconds()
+        scope = makeRandomString("scope", num)
+        category = makeRandomString("category", num)
+
+        message = logger.makeMessage(messageLevel, messageValue, timestamp, scope, category)
+
+        expect(message.level).toBe(messageLevel)
+        expect(message.value).toBe(messageValue)
+        expect(message.timestamp).toBe(timestamp)
+
+        if scope
+          expect(message.scope).toBe(scope)
+        else
+          expect(message.scope).toBe(Scope.APPLICATION)
+
+        expect(message.category).toBe(category)
+
+
+
     it 'should make metrics using the minimal-required data', ->
       logger = new Logger(apiHost, apiKey)
 
@@ -274,7 +325,7 @@ define ['logger'], (logger) ->
         expect(metric.timestamp).toBe(timestamp)
         expect(metric.unit).toBe("ms")
 
-    it 'should create a log message using provided events and metrics', ->
+    it 'should create a log message using provided events, messages, and metrics', ->
 
       for num in [1..10]
         numMetrics = randInt()
@@ -283,17 +334,22 @@ define ['logger'], (logger) ->
         numEvents = randInt()
         events = makeEvents(numEvents)
 
-        message = logger._createLogMessage(events, metrics)
+        numMessages = randInt()
+        messages = makeMessages(numMessages)
+
+        logMessage = logger._createLogMessage(events, metrics, messages)
 
         expectedLogMessage =
           "apiAccessKey": apiKey,
           "context": { userAgent : navigator.userAgent},
           "events": events,
+          "messages": messages,
           "metrics": metrics
 
         expect(events.length).toBe(numEvents)
         expect(metrics.length).toBe(numMetrics)
-        expect(message).toEqual(expectedLogMessage)
+        expect(messages.length).toBe(numMessages)
+        expect(logMessage).toEqual(expectedLogMessage)
 
     it 'should include default context in log message', ->
       options =
@@ -304,8 +360,9 @@ define ['logger'], (logger) ->
       for num in [1..10]
         metrics = makeMetrics(randInt())
         events = makeEvents(randInt())
+        messages = makeMessages(randInt())
 
-        message = logger._createLogMessage(events, metrics)
+        message = logger._createLogMessage(events, metrics, messages)
 
         expectedContext =
           "application": options.application
@@ -460,6 +517,33 @@ define ['logger'], (logger) ->
 
         expectedEvent = logger.makeEvent(eventName, timestamp, scope, category)
         expect(logger.buffers.events).toContain(expectedEvent)
+
+        expect(logger._triggerSendToAPI).toHaveBeenCalled()
+
+
+
+  describe 'Logger message support', ->
+    logger = null
+    apiHost = "localhost:9000"
+    apiKey = "abcd-1234"
+
+    beforeEach () ->
+      logger = new Logger(apiHost, apiKey)
+
+    it 'should buffer a message with the provided parameters when recordMessage is called', ->
+      spyOn(logger, '_triggerSendToAPI')
+
+      for num in [1..25]
+        messageLevel = "level-#{generateUniqueId(3)}"
+        messageValue = "appMessage-#{generateUniqueId(3)}"
+        timestamp = epochTimeInMilliseconds()
+        scope = makeRandomString("scope")
+        category = makeRandomString("category")
+
+        logger.recordMessage(messageLevel, messageValue, timestamp, scope, category)
+
+        expectedMessage = logger.makeMessage(messageLevel, messageValue, timestamp, scope, category)
+        expect(logger.buffers.messages).toContain(expectedMessage)
 
         expect(logger._triggerSendToAPI).toHaveBeenCalled()
 

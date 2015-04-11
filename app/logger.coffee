@@ -1,6 +1,13 @@
 weblogng = this
 window?.weblogng = weblogng
 
+window?.onerror = (fn, msg, url, line, col, error) ->
+  recordMessage("ERROR", msg)
+  suppressErrorAlert = true
+  return suppressErrorAlert
+
+
+
 weblogng.generateUniqueId = (length = 12) ->
   id = ""
   id += Math.random().toString(36).substr(2) while id.length < length
@@ -127,6 +134,7 @@ class weblogng.Logger
     @timers = {}
     @buffers =
       events: []
+      messages: []
       metrics: []
 
 
@@ -167,8 +175,16 @@ class weblogng.Logger
       "name": name
       , "timestamp": timestamp
     }
-
     return @_addAttributesToLogItem(event, scope, category)
+
+  makeMessage: (level, value, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined ) ->
+    message = {
+      "level": level
+      , "value": value
+      , "timestamp": timestamp
+    }
+
+    return @_addAttributesToLogItem(message, scope, category)
 
   makeMetric: (name, value, timestamp = epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
     metric = {
@@ -182,11 +198,13 @@ class weblogng.Logger
 
   _sendToAPI: () ->
     events = @buffers.events
+    messages = @buffers.messages
     metrics = @buffers.metrics
     @buffers.events = []
+    @buffers.messages = []
     @buffers.metrics = []
 
-    @apiConnection.send(@_createLogMessage(events, metrics))
+    @apiConnection.send(@_createLogMessage(events, metrics, messages))
 
 
   _triggerSendToAPI: () ->
@@ -199,7 +217,8 @@ class weblogng.Logger
   _createAPIConnection: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)
 
-  _createLogMessage: (events = [], metrics = []) ->
+    # TODO - better name????
+  _createLogMessage: (events = [], metrics = [], messages = []) ->
     for event in events
       event.name = @_sanitizeMetricName(event.name)
 
@@ -215,13 +234,14 @@ class weblogng.Logger
     if userAgent
       context.userAgent = userAgent
 
-    message =
+    logMessage =
       "apiAccessKey": @apiKey,
       "context": context,
       "events": events
+      "messages":messages
       "metrics": metrics
 
-    return message
+    return logMessage
 
   _sanitizeMetricName: (metricName) ->
     metricName.replace patterns.MATCH_FORBIDDEN_METRIC_NAME_CHARS, ' '
@@ -263,6 +283,10 @@ class weblogng.Logger
 
   recordEvent: (eventName, timestamp=epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
     @buffers.events.push(@makeEvent(eventName, timestamp, scope, category))
+    @_triggerSendToAPI()
+
+  recordMessage: (level, value, timestamp=epochTimeInMilliseconds(), scope = Scope.APPLICATION, category = undefined) ->
+    @buffers.messages.push(@makeMessage(level, value, timestamp, scope, category))
     @_triggerSendToAPI()
 
   _initNavigationTimingPublishProcess: () ->
