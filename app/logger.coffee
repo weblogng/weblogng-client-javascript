@@ -1,11 +1,15 @@
 weblogng = this
 window?.weblogng = weblogng
 
-window?.onerror = (fn, msg, url, line, col, error) ->
-  recordMessage("ERROR", msg)
-  suppressErrorAlert = true
-  return suppressErrorAlert
+previousOnErrorHandler = window.onerror
 
+weblogng.addExceptionHandler = (handler) ->
+  window?.onerror = (fn, msg, url, line, col, error) ->
+    # TODO should levels be enumerated and validated before sent to server?
+    handler("Critical", msg)
+    # handle previous handler
+    suppressErrorAlert = true
+    return suppressErrorAlert
 
 
 weblogng.generateUniqueId = (length = 12) ->
@@ -160,6 +164,8 @@ class weblogng.Logger
       @_sendToAPI()
 
     @_throttledSendToAPI = weblogng.throttle(_sendToAPI, 5000)
+
+    weblogng.addExceptionHandler(@recordMessage)
 
   _addAttributesToLogItem: (obj, scope, category) ->
     if scope

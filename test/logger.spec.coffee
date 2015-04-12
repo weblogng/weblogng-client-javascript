@@ -908,3 +908,22 @@ define ['logger'], (logger) ->
       expect(toPageName({pathname: undefined})).toBe("unknown-page")
       expect(toPageName({pathname: null})).toBe("unknown-page")
 
+  describe 'addExceptionHandler', ->
+    window = {}
+    logger  = new Logger(apiHost, apiKey)
+    apiHost = "localhost:9000"
+    apiKey = "abcd-1234"
+
+
+    it 'should set handler message to listen to onerror events', ->
+      handler = jasmine.createSpy()
+      window.onerror = () ->
+
+      onErrorFn = addExceptionHandler(handler)
+      onErrorFn({}, "error message")
+
+      expect(handler).toHaveBeenCalledWith('Critical', "error message")
+
+
+
+
