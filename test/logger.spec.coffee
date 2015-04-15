@@ -908,21 +908,37 @@ define ['logger'], (logger) ->
       expect(toPageName({pathname: undefined})).toBe("unknown-page")
       expect(toPageName({pathname: null})).toBe("unknown-page")
 
-  describe 'addExceptionHandler', ->
-    window = {}
-    logger  = new Logger(apiHost, apiKey)
+  describe '_initExceptionHandler', ->
     apiHost = "localhost:9000"
     apiKey = "abcd-1234"
 
+    window =
+      onerror: null #jasmine.createSpy()
 
-    it 'should set handler message to listen to onerror events', ->
-      handler = jasmine.createSpy()
-      window.onerror = () ->
+    logger = new Logger(apiHost, apiKey, {publishUserActive: true})
 
-      onErrorFn = addExceptionHandler(handler)
-      onErrorFn({}, "error message")
 
-      expect(handler).toHaveBeenCalledWith('Critical', "error message")
+    it 'should set onerror handler', ->
+      logger._initExceptionHandler(window)
+      expect(window.onerror).toNotBe(null)
+
+    it 'should record FALAL message for unhandled errors ', ->
+      logger._initExceptionHandler(window)
+      logger.recordMessage = jasmine.createSpy()
+      window.onerror("some message")
+      expect(logger.recordMessage).toHaveBeenCalledWith('FATAL', 'some message')
+
+    it 'should call previuos error handler too', ->
+      window =
+        onerror : jasmine.createSpy()
+
+      console.log("ccc", window.onerror)
+      logger._initExceptionHandler(window)
+      logger.recordMessage = jasmine.createSpy()
+      window.onerror("some message")
+      expect(logger.recordMessage).toHaveBeenCalledWith('FATAL', 'some message')
+
+
 
 
 

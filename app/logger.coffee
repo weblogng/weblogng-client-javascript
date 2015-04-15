@@ -1,16 +1,11 @@
 weblogng = this
 window?.weblogng = weblogng
 
-previousOnErrorHandler = window.onerror
-
-weblogng.addExceptionHandler = (handler) ->
-  window?.onerror = (fn, msg, url, line, col, error) ->
-    # TODO should levels be enumerated and validated before sent to server?
-    handler("Critical", msg)
-    # handle previous handler
-    suppressErrorAlert = true
-    return suppressErrorAlert
-
+FATAL = "FATAL"
+ERROR = "ERROR"
+WARN = "WARN"
+DEBUG = "DEBUG"
+INFO  = "INFO"
 
 weblogng.generateUniqueId = (length = 12) ->
   id = ""
@@ -165,7 +160,7 @@ class weblogng.Logger
 
     @_throttledSendToAPI = weblogng.throttle(_sendToAPI, 5000)
 
-    weblogng.addExceptionHandler(@recordMessage)
+    @_initExceptionHandler()
 
   _addAttributesToLogItem: (obj, scope, category) ->
     if scope
@@ -223,7 +218,6 @@ class weblogng.Logger
   _createAPIConnection: (apiUrl) ->
     return new weblogng.APIConnection(apiUrl)
 
-    # TODO - better name????
   _createLogMessage: (events = [], metrics = [], messages = []) ->
     for event in events
       event.name = @_sanitizeMetricName(event.name)
@@ -244,7 +238,7 @@ class weblogng.Logger
       "apiAccessKey": @apiKey,
       "context": context,
       "events": events
-      "messages":messages
+      "messages": messages
       "metrics": metrics
 
     return logMessage
@@ -377,6 +371,16 @@ class weblogng.Logger
       events: events
 
     return data
+
+
+  _initExceptionHandler: (root = window) ->
+    previousOnErrorHandler = root.onerror
+    root?.onerror = (msg, url, line, col, error) =>
+      @recordMessage(FATAL, msg)
+      # handle previous handler
+      @previousOnErrorHandler(msg, url, line, col, error) if @previousOnErrorHandler?
+      suppressErrorAlert = true
+      return suppressErrorAlert
 
   _initUserActivityPublishProcess: (root = window) ->
     userActivityOccurred = =>
